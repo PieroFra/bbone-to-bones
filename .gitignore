@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+
+dist/
+*.blend
+*.blend1
+*.blend2
+
+ci-logs/
+.opencode/
+AGENTS.md
+opencode.json

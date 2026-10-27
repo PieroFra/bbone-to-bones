@@ -1,0 +1,24 @@
+schema_version = "1.0.0"
+
+# BBone to Bones - convert bendy bones into real bone chains.
+id = "bbone_to_bones"
+version = "0.1.0"
+name = "BBone to Bones"
+tagline = "Converts bendy bones into real bone chains ready for export"
+maintainer = "Piero Fra"
+
+type = "add-on"
+
+# Blender Extensions: GPL v3+ is a requirement for the official platform.
+license = [
+  "SPDX:GPL-3.0-or-later",
+]
+
+blender_version_min = "4.2.0"
+
+tags = [
+  "Animation",
+  "Rigging",
+]
+
+# v1: BBone conversion >= weights >= bake >= export presets (FBX Unity/UE, glTF Godot).
