@@ -1,5 +1,9 @@
 # BBone to Bones
 
+[![Blender](https://img.shields.io/badge/Blender-4.2%20LTS%2B-blueviolet)](https://www.blender.org)
+[![License](https://img.shields.io/badge/License-GPL--3.0--or--later-blue)](LICENSE)
+[![XERJ Corpus Hub contributor](https://hub.xerj.org/contributors/PieroFra/badge.svg)](https://hub.xerj.org/contributors/PieroFra)
+
 Converts Blender bendy bones (BBone) into real bone chains, with correct
 weights, baked animation and export presets ready for
 **Unity**, **Unreal Engine** and **Godot**.
