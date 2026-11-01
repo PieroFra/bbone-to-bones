@@ -7,6 +7,13 @@ dist/
 *.blend2
 
 ci-logs/
-.opencode/
+
+# Cartella locale OpenCode ignorata di default, con eccezione deliberata: lo
+# script di packaging e' richiesto da .github/workflows/ci.yml e deve stare nel repo.
+/.opencode/*
+!/.opencode/scripts/
+/.opencode/scripts/*
+!/.opencode/scripts/package_release.ps1
+
 AGENTS.md
 opencode.json

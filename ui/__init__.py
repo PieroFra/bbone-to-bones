@@ -14,6 +14,7 @@ from .operators import (
     BTOB_OT_export_rig,
     BTOB_OT_limit_influences,
     BTOB_OT_remove_constraints,
+    BTOB_OT_revert_to_bbones,
     BTOB_OT_transfer_weights,
 )
 from .panel import VIEW3D_PT_BBoneToBones
@@ -30,6 +31,7 @@ CLASSES = (
     BTOB_OT_limit_influences,
     BTOB_OT_export_rig,
     BTOB_OT_convert_all,
+    BTOB_OT_revert_to_bbones,
     VIEW3D_PT_BBoneToBones,
 )
 
@@ -43,6 +45,7 @@ __all__ = [
     "BTOB_OT_limit_influences",
     "BTOB_OT_export_rig",
     "BTOB_OT_convert_all",
+    "BTOB_OT_revert_to_bbones",
     "VIEW3D_PT_BBoneToBones",
     "CLASSES",
 ]

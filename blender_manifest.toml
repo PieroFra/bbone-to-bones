@@ -22,3 +22,21 @@ tags = [
 ]
 
 # v1: BBone conversion >= weights >= bake >= export presets (FBX Unity/UE, glTF Godot).
+
+# Esclusioni per "blender --command extension build": nel pacchetto va solo il
+# runtime dell'addon, nessun file di sviluppo.
+[build]
+paths_exclude_pattern = [
+  "__pycache__/",
+  "/.git/",
+  "/.github/",
+  "/.opencode/",
+  "/tests/",
+  "/docs/",
+  "/dist/",
+  "/ci-logs/",
+  "/*.blend",
+  "/*.blend1",
+  "/AGENTS.md",
+  "/opencode.json",
+]

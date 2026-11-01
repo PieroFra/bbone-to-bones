@@ -1029,10 +1029,59 @@ def do_fase5_ui_operators():
             if not os.path.isfile(export_path) or os.path.getsize(export_path) == 0:
                 raise AssertionError("export_rig wrote no file at {0}".format(export_path))
             size = os.path.getsize(export_path)
+
+            # The preset update rewrites the extension of the export path.
+            settings.export_path = export_path
+            settings.export_preset = "GODOT"
+            if not settings.export_path.endswith(".glb"):
+                raise AssertionError(
+                    "GODOT preset left export_path as {0}".format(settings.export_path)
+                )
+            settings.export_preset = "UNITY"
+            if not settings.export_path.endswith(".fbx"):
+                raise AssertionError(
+                    "UNITY preset left export_path as {0}".format(settings.export_path)
+                )
+
+        bpy.context.view_layer.objects.active = arm_obj
+        _run("revert_to_bbones", lambda: bpy.ops.btob.revert_to_bbones())
+        leftover = [bone.name for bone in arm_obj.data.bones if "_seg_" in bone.name]
+        if leftover:
+            raise AssertionError("revert_to_bbones left segments {0}".format(leftover))
+        sources = [
+            "{0}{1}.{2:03d}".format(CHAIN_PREFIX, letter, seg)
+            for letter in CHAIN_NAMES
+            for seg in range(BONES_PER_CHAIN)
+        ]
+        for source_name in sources:
+            bone = arm_obj.data.bones.get(source_name)
+            if bone is None:
+                raise AssertionError("source bone {0} missing after revert".format(source_name))
+            if not bone.use_deform:
+                raise AssertionError("source bone {0} kept use_deform False".format(source_name))
+        body = meshes[0]
+        if len(body.data.vertices) != 20:
+            raise AssertionError(
+                "BodyHigh has {0} vertices != 20".format(len(body.data.vertices))
+            )
+        root_group = body.vertex_groups.get("{0}A.000".format(CHAIN_PREFIX))
+        if root_group is None:
+            raise AssertionError("BendyA.000 group missing after revert")
+        for vertex in body.data.vertices:
+            weight = 0.0
+            for element in vertex.groups:
+                if element.group == root_group.index:
+                    weight = element.weight
+            if abs(weight - 1.0) > 1e-5:
+                raise AssertionError(
+                    "vertex {0} weight on BendyA.000 is {1} != 1.0".format(
+                        vertex.index, weight
+                    )
+                )
     finally:
         mod.unregister()
 
-    return "{0} operators, double register, mesh refused, 7 calls FINISHED, export {1} bytes".format(
+    return "{0} operators, double register, mesh refused, 8 calls FINISHED, export {1} bytes".format(
         operator_count, size
     )
 

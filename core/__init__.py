@@ -19,6 +19,7 @@ from .segments import (  # noqa: E402  (after the shared constants on purpose)
     collect_segment_specs,
     convert_bbones_to_segments,
     is_convertible_bone,
+    revert_segments_to_bbones,
     segment_bone_name,
 )
 

@@ -5,7 +5,34 @@ Every value here is drawn by ui/panel.py and read by ui/operators.py; nothing
 in this module touches the rig itself.
 """
 
+import os
+
 import bpy
+
+# Extension of the file written by each engine preset: Godot imports glTF,
+# Unity and Unreal import FBX. The panel and the export operator share it.
+PRESET_EXTENSIONS = {"UNITY": ".fbx", "UNREAL": ".fbx", "GODOT": ".glb"}
+KNOWN_EXTENSIONS = (".fbx", ".glb")
+
+
+def with_preset_extension(path, preset):
+    """Return ``path`` with the extension of ``preset``.
+
+    Only ``.fbx`` and ``.glb`` are swapped, so a path the user wrote by hand
+    with any other extension is left untouched. An empty path stays empty.
+    """
+    extension = PRESET_EXTENSIONS.get(preset)
+    if not path or extension is None:
+        return path
+    root, current = os.path.splitext(path)
+    if current.lower() not in KNOWN_EXTENSIONS:
+        return path
+    return root + extension
+
+
+def _on_preset_update(settings, context):
+    """Keep the export extension in sync with the chosen engine preset."""
+    settings.export_path = with_preset_extension(settings.export_path, settings.export_preset)
 
 
 class BBoneToBonesSettings(bpy.types.PropertyGroup):
@@ -59,6 +86,7 @@ class BBoneToBonesSettings(bpy.types.PropertyGroup):
             ("GODOT", "Godot (glTF)", "glTF preset for Godot"),
         ),
         default="UNITY",
+        update=_on_preset_update,
     )
     max_influences: bpy.props.IntProperty(
         name="Max Influences",

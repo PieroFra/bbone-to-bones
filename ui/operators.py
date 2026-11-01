@@ -8,6 +8,7 @@ and calls core; the math stays in core/.
 import bpy
 
 from .. import core
+from .properties import with_preset_extension
 
 
 class _Progress:
@@ -325,7 +326,9 @@ class BTOB_OT_export_rig(bpy.types.Operator):
             return {"CANCELLED"}
         try:
             settings = _settings(context)
-            path = self.filepath or bpy.path.abspath(settings.export_path)
+            path = self.filepath or with_preset_extension(
+                bpy.path.abspath(settings.export_path), settings.export_preset
+            )
             if not path:
                 raise ValueError("Export path is empty")
             with _Progress(1) as progress:
@@ -344,6 +347,35 @@ class BTOB_OT_export_rig(bpy.types.Operator):
             {"INFO"},
             "Exported {0} with preset {1} to {2}".format(
                 report["format"], report["preset"], report["filepath"]
+            ),
+        )
+        return {"FINISHED"}
+
+
+class BTOB_OT_revert_to_bbones(bpy.types.Operator):
+    """Delete the converted segments and give the bendy bones their skin back."""
+
+    bl_idname = "btob.revert_to_bbones"
+    bl_label = "Revert to BBones"
+    bl_description = "Delete the converted segments and move their weights back on the bendy bones"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        arm_obj = _require_armature(self, context)
+        if arm_obj is None:
+            return {"CANCELLED"}
+        try:
+            report = core.revert_segments_to_bbones(arm_obj)
+        except (ValueError, RuntimeError) as exc:
+            self.report({"ERROR"}, str(exc))
+            return {"CANCELLED"}
+        if not report["reverted"]:
+            self.report({"ERROR"}, "No converted segment to revert")
+            return {"CANCELLED"}
+        self.report(
+            {"INFO"},
+            "Reverted {0} bendy bones, removed {1} segments".format(
+                len(report["reverted"]), len(report["removed_segments"])
             ),
         )
         return {"FINISHED"}
