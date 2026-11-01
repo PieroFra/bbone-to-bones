@@ -958,7 +958,47 @@ def do_fase4_export_reimport():
                     )
             checked += 1
 
-    return "{0} presets reimported: {1} segments, Hip, 2 meshes".format(checked, len(segments))
+    # Real-engine gate: import the demo export in Godot 4.3 when both the Godot
+    # console exe and the check script exist locally (CI has neither, so it
+    # degrades there to a clean skip; locally the real check runs).
+    import subprocess
+
+    godot_tmp = os.path.join(
+        os.environ.get("TEMP", tempfile.gettempdir()), "opencode", "btob_gui"
+    )
+    godot_exe = r"C:\Users\checc\AppData\Local\Programs\Godot\Godot_v4.3-stable_win64_console.exe"
+    godot_check_script = os.path.expanduser(
+        os.path.join("~", ".config", "opencode", "scripts", "godot_import_check.py")
+    )
+    godot_glb_path = os.path.join(godot_tmp, "demo_export.glb")
+    engine_note = ""
+    if os.path.isfile(godot_exe) and os.path.isfile(godot_check_script) and os.path.isfile(godot_glb_path):
+        result = subprocess.run(
+            [
+                sys.executable,
+                godot_check_script,
+                godot_glb_path,
+                "--min-bones",
+                "96",
+                "--min-meshes",
+                "2",
+                "--require-anim",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        output = "{0}{1}".format(result.stdout or "", result.stderr or "")
+        if "ENGINE_CHECK_OK" not in output:
+            raise AssertionError(
+                "godot engine check failed on {0}: {1}".format(
+                    godot_glb_path, output.strip()[:300]
+                )
+            )
+        engine_note = " ; godot engine import ok"
+
+    return "{0} presets reimported: {1} segments, Hip, 2 meshes{2}".format(
+        checked, len(segments), engine_note
+    )
 
 
 def do_fase5_ui_operators():
