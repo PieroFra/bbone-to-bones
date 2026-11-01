@@ -13,3 +13,38 @@ VERSION = (0, 1, 0)
 # Tolerances used by the numeric contract between the conversion and its tests.
 HEAD_MATCH_TOLERANCE = 1e-5  # Fase 1: segment heads on the bbone curve.
 POSE_MATCH_MAX_ERROR = 0.001  # Fase 2/3: max 1 mm between posed meshes.
+
+# Public Fase 1 API: bendy bones -> chains of regular bones.
+from .segments import (  # noqa: E402  (after the shared constants on purpose)
+    collect_segment_specs,
+    convert_bbones_to_segments,
+    is_convertible_bone,
+    segment_bone_name,
+)
+
+# Public Fase 2 API: skin weights of the bbones -> converted segment bones.
+from .weights import (  # noqa: E402  (same reason: keep constants first)
+    find_rigged_meshes,
+    pose_segments_from_bbones,
+    split_bbone_weight,
+    transfer_bbone_weights,
+    vertex_coords_in_armature_space,
+)
+
+# Public Fase 3 API: bbone animation -> keyframes on the segment bones.
+from .bake import (  # noqa: E402  (same reason: keep constants first)
+    CONSTRAINT_NAME,
+    add_bbone_follow_constraints,
+    bake_segments_animation,
+    remove_bbone_follow_constraints,
+    select_only_segment_bones,
+)
+
+# Public Fase 4 API: influence cap + FBX/glTF export of the converted rig.
+from .export import (  # noqa: E402  (same reason: keep constants first)
+    DEFAULT_MAX_INFLUENCES,
+    EXPORT_PRESETS,
+    build_export_kwargs,
+    export_rig,
+    limit_vertex_influences,
+)

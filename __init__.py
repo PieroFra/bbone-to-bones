@@ -32,25 +32,14 @@ def _ui_module():
 
 CLASSES = ()
 
+SETTINGS_NAME = "bbone_to_bones_settings"
+
 
 def _collect_classes():
     """Collect registrable classes from ui/. core/ holds logic only."""
     global CLASSES
     ui = _ui_module()
-    classes = []
-    for name in dir(ui):
-        obj = getattr(ui, name)
-        if isinstance(obj, type) and issubclass(obj, bpy_types_super()):
-            classes.append(obj)
-    if not classes:
-        raise RuntimeError("BBone to Bones: no registrable classes found in ui/")
-    CLASSES = tuple(classes)
-
-
-def bpy_types_super():
-    import bpy
-
-    return bpy.types.Panel
+    CLASSES = tuple(ui.CLASSES)
 
 
 def register():
@@ -60,18 +49,44 @@ def register():
         try:
             bpy_classes_register(cls)
         except Exception:
-            if not cls.is_registered():
+            if not getattr(cls, "is_registered", False):
                 raise
     # Idempotent register(): safe under double registration.
+    _register_settings()
 
 
 def unregister():
+    # The Scene pointer must go before the PropertyGroup class it points at.
+    _unregister_settings()
     for cls in reversed(CLASSES):
         try:
             bpy_classes_unregister(cls)
         except Exception:
-            if cls.is_registered():
+            if getattr(cls, "is_registered", False):
                 raise
+
+
+def _register_settings():
+    """Attach the PropertyGroup to Scene once, even under double register()."""
+    import bpy
+
+    if getattr(bpy.types.Scene, SETTINGS_NAME, None) is not None:
+        return
+    ui = _ui_module()
+    setattr(
+        bpy.types.Scene,
+        SETTINGS_NAME,
+        bpy.props.PointerProperty(type=ui.BBoneToBonesSettings),
+    )
+
+
+def _unregister_settings():
+    """Detach the PropertyGroup from Scene; safe when it is already gone."""
+    import bpy
+
+    if getattr(bpy.types.Scene, SETTINGS_NAME, None) is None:
+        return
+    delattr(bpy.types.Scene, SETTINGS_NAME)
 
 
 def bpy_classes_register(cls):

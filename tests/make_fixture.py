@@ -130,7 +130,16 @@ def _build_mesh(scene, arm_obj, obj_name, mesh_name, non_identity):
         for v in range(2)
         for w in range(2)
     ]
-    mesh_data.from_pydata(verts, [], [])
+    faces = [
+        (u * 4 + 0, u * 4 + 1, (u + 1) * 4 + 1, (u + 1) * 4 + 0)
+        for u in range(side - 1)
+    ] + [
+        (u * 4 + 2, u * 4 + 3, (u + 1) * 4 + 3, (u + 1) * 4 + 2)
+        for u in range(side - 1)
+    ]
+    mesh_data.from_pydata(verts, [], faces)
+    for poly in mesh_data.polygons:
+        poly.use_smooth = True
     mesh_data.validate()
     mesh_data.update()
 
