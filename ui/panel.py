@@ -59,6 +59,7 @@ class VIEW3D_PT_BBoneToBones(bpy.types.Panel):
         """Conversion, weight transfer and influence cap."""
         column = layout.column(align=True)
         column.label(text="Segments & Weights")
+        column.prop(settings, "selected_bones_only")
         column.operator("btob.convert_segments", text="Convert Segments")
         column.operator("btob.transfer_weights", text="Transfer Weights")
         column.prop(settings, "normalize_deform")

@@ -45,6 +45,10 @@ Select an armature with bendy bones, then run the four steps of the pipeline:
 Alternatively press **Convert All** (`btob.convert_all`) to run segments +
 weights + bake in one click on the active armature.
 
+The **Selected Bones Only** checkbox (`selected_bones_only`) restricts every
+pipeline step (convert, weights, bake, export) to the bendy bones currently
+selected in Pose or Object mode.
+
 Changed your mind? **Revert to BBones** (`btob.revert_to_bbones`) deletes
 the converted segments and moves their skin weights back onto the original
 bendy bones, restoring the BBone rig.

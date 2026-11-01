@@ -1016,6 +1016,43 @@ def do_fase5_ui_operators():
                 )
 
         bpy.context.view_layer.objects.active = arm_obj
+
+        # Selected-bones-only: just the four bones of Chain A are converted.
+        settings.selected_bones_only = True
+        chain_a = [
+            "{0}A.{1:03d}".format(CHAIN_PREFIX, seg) for seg in range(BONES_PER_CHAIN)
+        ]
+        for bone in arm_obj.data.bones:
+            if hasattr(bone, "select"):
+                bone.select = bone.name in chain_a
+        for pose_bone in arm_obj.pose.bones:
+            if hasattr(pose_bone, "select"):
+                pose_bone.select = pose_bone.name in chain_a
+        _run("convert_segments", lambda: bpy.ops.btob.convert_segments())
+        created = [bone.name for bone in arm_obj.data.bones if "_seg_" in bone.name]
+        expected_chain_a = BONES_PER_CHAIN * BBONE_SEGMENTS
+        if len(created) != expected_chain_a:
+            raise AssertionError(
+                "selected_bones_only created {0} segments, expected {1}".format(
+                    len(created), expected_chain_a
+                )
+            )
+        prefix_a = "{0}A.".format(CHAIN_PREFIX)
+        if any(not name.startswith(prefix_a) for name in created):
+            raise AssertionError(
+                "selected_bones_only converted bones outside Chain A: {0}".format(
+                    sorted(name for name in created if not name.startswith(prefix_a))
+                )
+            )
+        for letter in ("B", "C"):
+            letter_prefix = "{0}{1}.".format(CHAIN_PREFIX, letter)
+            if any(name.startswith(letter_prefix) for name in created):
+                raise AssertionError(
+                    "Chain {0} must not be converted with selected_bones_only".format(letter)
+                )
+        settings.selected_bones_only = False
+        _run("revert_to_bbones", lambda: bpy.ops.btob.revert_to_bbones())
+
         _run("convert_segments", lambda: bpy.ops.btob.convert_segments())
         _run("transfer_weights", lambda: bpy.ops.btob.transfer_weights())
         _run("add_constraints", lambda: bpy.ops.btob.add_constraints())
@@ -1081,7 +1118,7 @@ def do_fase5_ui_operators():
     finally:
         mod.unregister()
 
-    return "{0} operators, double register, mesh refused, 8 calls FINISHED, export {1} bytes".format(
+    return "{0} operators, double register, mesh refused, 10 calls FINISHED, export {1} bytes".format(
         operator_count, size
     )
 

@@ -66,25 +66,56 @@ def _settings(context):
     return settings
 
 
-def _bendy_bone_names(arm_obj):
-    """Names of the bendy bones (``bbone_segments > 1``) of ``arm_obj``."""
-    return [bone.name for bone in arm_obj.data.bones if core.is_convertible_bone(bone)]
+def _is_bone_selected(arm_obj, bone_name):
+    """True when the bone or its pose bone is selected (4.2 / 5.x safe)."""
+    pose_bone = arm_obj.pose.bones.get(bone_name)
+    if pose_bone is not None and bool(getattr(pose_bone, "select", False)):
+        return True
+    bone = arm_obj.data.bones.get(bone_name)
+    return bone is not None and bool(getattr(bone, "select", False))
 
 
-def _converted_bone_names(arm_obj):
+def _bendy_bone_names(arm_obj, selected_only=False):
+    """Names of the bendy bones (``bbone_segments > 1``) of ``arm_obj``.
+
+    With ``selected_only`` a bone is kept when it is selected itself or when at
+    least one of the segment bones it was converted into is selected.
+    """
+    names = [bone.name for bone in arm_obj.data.bones if core.is_convertible_bone(bone)]
+    if not selected_only:
+        return names
+    kept = []
+    for name in names:
+        if _is_bone_selected(arm_obj, name):
+            kept.append(name)
+            continue
+        count = int(getattr(arm_obj.data.bones[name], "bbone_segments", 1))
+        if any(
+            _is_bone_selected(arm_obj, core.segment_bone_name(name, index))
+            for index in range(max(1, count))
+        ):
+            kept.append(name)
+    return kept
+
+
+def _converted_bone_names(arm_obj, selected_only=False):
     """Bendy bones that already own a segment 0, i.e. are already converted."""
     bones = arm_obj.data.bones
     return [
         name
-        for name in _bendy_bone_names(arm_obj)
+        for name in _bendy_bone_names(arm_obj, selected_only=selected_only)
         if core.segment_bone_name(name, 0) in bones
     ]
 
 
-def _pending_bone_names(arm_obj):
+def _pending_bone_names(arm_obj, selected_only=False):
     """Bendy bones still waiting for the conversion."""
-    converted = set(_converted_bone_names(arm_obj))
-    return [name for name in _bendy_bone_names(arm_obj) if name not in converted]
+    converted = set(_converted_bone_names(arm_obj, selected_only=selected_only))
+    return [
+        name
+        for name in _bendy_bone_names(arm_obj, selected_only=selected_only)
+        if name not in converted
+    ]
 
 
 def _bake_range(context, settings):
@@ -111,14 +142,16 @@ class BTOB_OT_convert_segments(bpy.types.Operator):
         arm_obj = _require_armature(self, context)
         if arm_obj is None:
             return {"CANCELLED"}
-        if not _bendy_bone_names(arm_obj):
-            self.report({"ERROR"}, "No bendy bone with more than one segment in this armature")
-            return {"CANCELLED"}
-        pending = _pending_bone_names(arm_obj)
-        if not pending:
-            self.report({"ERROR"}, "Every bendy bone is already converted")
-            return {"CANCELLED"}
         try:
+            settings = _settings(context)
+            selected_only = bool(settings.selected_bones_only)
+            if not _bendy_bone_names(arm_obj, selected_only=selected_only):
+                self.report({"ERROR"}, "No bendy bone with more than one segment in this armature")
+                return {"CANCELLED"}
+            pending = _pending_bone_names(arm_obj, selected_only=selected_only)
+            if not pending:
+                self.report({"ERROR"}, "Every bendy bone is already converted")
+                return {"CANCELLED"}
             with _Progress(len(pending)) as progress:
                 report = core.convert_bbones_to_segments(arm_obj, bone_names=pending)
                 progress.update(len(pending))
@@ -188,7 +221,13 @@ class BTOB_OT_add_constraints(bpy.types.Operator):
         if arm_obj is None:
             return {"CANCELLED"}
         try:
-            report = core.add_bbone_follow_constraints(arm_obj)
+            settings = _settings(context)
+            sources = (
+                _converted_bone_names(arm_obj, selected_only=True)
+                if settings.selected_bones_only
+                else None
+            )
+            report = core.add_bbone_follow_constraints(arm_obj, bone_names=sources)
         except (ValueError, RuntimeError) as exc:
             self.report({"ERROR"}, str(exc))
             return {"CANCELLED"}
@@ -217,7 +256,13 @@ class BTOB_OT_remove_constraints(bpy.types.Operator):
         if arm_obj is None:
             return {"CANCELLED"}
         try:
-            removed = core.remove_bbone_follow_constraints(arm_obj)
+            settings = _settings(context)
+            sources = (
+                _converted_bone_names(arm_obj, selected_only=True)
+                if settings.selected_bones_only
+                else None
+            )
+            removed = core.remove_bbone_follow_constraints(arm_obj, bone_names=sources)
         except (ValueError, RuntimeError) as exc:
             self.report({"ERROR"}, str(exc))
             return {"CANCELLED"}
@@ -245,12 +290,18 @@ class BTOB_OT_bake_animation(bpy.types.Operator):
             frame_start, frame_end = _bake_range(context, settings)
             step = int(settings.frame_step)
             samples = _sample_count(frame_start, frame_end, step)
+            sources = (
+                _converted_bone_names(arm_obj, selected_only=True)
+                if settings.selected_bones_only
+                else None
+            )
             with _Progress(samples) as progress:
                 report = core.bake_segments_animation(
                     arm_obj,
                     frame_start=frame_start,
                     frame_end=frame_end,
                     step=step,
+                    bone_names=sources,
                     remove_constraints=settings.remove_constraints,
                 )
                 progress.update(samples)
@@ -365,7 +416,13 @@ class BTOB_OT_revert_to_bbones(bpy.types.Operator):
         if arm_obj is None:
             return {"CANCELLED"}
         try:
-            report = core.revert_segments_to_bbones(arm_obj)
+            settings = _settings(context)
+            sources = (
+                _converted_bone_names(arm_obj, selected_only=True)
+                if settings.selected_bones_only
+                else None
+            )
+            report = core.revert_segments_to_bbones(arm_obj, bone_names=sources)
         except (ValueError, RuntimeError) as exc:
             self.report({"ERROR"}, str(exc))
             return {"CANCELLED"}
@@ -395,7 +452,9 @@ class BTOB_OT_convert_all(bpy.types.Operator):
             return {"CANCELLED"}
         try:
             settings = _settings(context)
-            pending = _pending_bone_names(arm_obj)
+            pending = _pending_bone_names(
+                arm_obj, selected_only=settings.selected_bones_only
+            )
             if not pending:
                 raise ValueError("No bendy bone left to convert")
             meshes = core.find_rigged_meshes(arm_obj)
@@ -418,6 +477,7 @@ class BTOB_OT_convert_all(bpy.types.Operator):
                     frame_start=frame_start,
                     frame_end=frame_end,
                     step=int(settings.frame_step),
+                    bone_names=pending,
                     remove_constraints=settings.remove_constraints,
                 )
         except (ValueError, RuntimeError) as exc:

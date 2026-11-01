@@ -38,6 +38,11 @@ def _on_preset_update(settings, context):
 class BBoneToBonesSettings(bpy.types.PropertyGroup):
     """Options of the conversion pipeline, one instance per scene."""
 
+    selected_bones_only: bpy.props.BoolProperty(
+        name="Selected Bones Only",
+        description="Operate only on the bendy bones currently selected in Pose or Object mode",
+        default=False,
+    )
     normalize_deform: bpy.props.BoolProperty(
         name="Normalize Deform Weights",
         description="Scale the deform weights of every vertex back to 1.0",
