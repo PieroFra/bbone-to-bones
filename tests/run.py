@@ -832,7 +832,7 @@ def do_fase4_influence_limit():
 
 
 def do_fase4_export_reimport():
-    """The three presets export the converted rig and reimport bones and meshes."""
+    """All five presets export the converted rig and reimport bones and meshes."""
     import tempfile
 
     import bpy
@@ -865,6 +865,8 @@ def do_fase4_export_reimport():
         ("UNITY", "unity.fbx"),
         ("UNREAL", "unreal.fbx"),
         ("GODOT", "godot.glb"),
+        ("UNITY_GLTF", "unity_gltf.glb"),
+        ("UNREAL_GLTF", "unreal_gltf.glb"),
     )
     checked = 0
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -1113,6 +1115,16 @@ def do_fase5_ui_operators():
             if not settings.export_path.endswith(".glb"):
                 raise AssertionError(
                     "GODOT preset left export_path as {0}".format(settings.export_path)
+                )
+            settings.export_preset = "UNITY_GLTF"
+            if not settings.export_path.endswith(".glb"):
+                raise AssertionError(
+                    "UNITY_GLTF preset left export_path as {0}".format(settings.export_path)
+                )
+            settings.export_preset = "UNREAL"
+            if not settings.export_path.endswith(".fbx"):
+                raise AssertionError(
+                    "UNREAL preset left export_path as {0}".format(settings.export_path)
                 )
             settings.export_preset = "UNITY"
             if not settings.export_path.endswith(".fbx"):

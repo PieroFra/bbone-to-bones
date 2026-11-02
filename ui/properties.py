@@ -11,7 +11,13 @@ import bpy
 
 # Extension of the file written by each engine preset: Godot imports glTF,
 # Unity and Unreal import FBX. The panel and the export operator share it.
-PRESET_EXTENSIONS = {"UNITY": ".fbx", "UNREAL": ".fbx", "GODOT": ".glb"}
+PRESET_EXTENSIONS = {
+    "UNITY": ".fbx",
+    "UNITY_GLTF": ".glb",
+    "UNREAL": ".fbx",
+    "UNREAL_GLTF": ".glb",
+    "GODOT": ".glb",
+}
 KNOWN_EXTENSIONS = (".fbx", ".glb")
 
 
@@ -87,7 +93,9 @@ class BBoneToBonesSettings(bpy.types.PropertyGroup):
         description="Export flags of the target engine",
         items=(
             ("UNITY", "Unity (FBX)", "FBX preset for Unity"),
+            ("UNITY_GLTF", "Unity (glTF)", "glTF preset for Unity"),
             ("UNREAL", "Unreal (FBX)", "FBX preset for Unreal Engine"),
+            ("UNREAL_GLTF", "Unreal (glTF)", "glTF preset for Unreal Engine 5"),
             ("GODOT", "Godot (glTF)", "glTF preset for Godot"),
         ),
         default="UNITY",

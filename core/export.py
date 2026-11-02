@@ -33,7 +33,7 @@ import bpy
 from .weights import find_rigged_meshes
 
 # Presets understood by :func:`build_export_kwargs`.
-EXPORT_PRESETS = ("UNITY", "UNREAL", "GODOT")
+EXPORT_PRESETS = ("UNITY", "UNREAL", "GODOT", "UNITY_GLTF", "UNREAL_GLTF")
 
 # Most engines deform a vertex with at most four bones.
 DEFAULT_MAX_INFLUENCES = 4
@@ -186,7 +186,15 @@ def build_export_kwargs(
             "axis_forward": "-Z",
             "axis_up": "Y",
         }
-        if preset == "UNREAL":
+        if preset == "UNITY":
+            kwargs.update(
+                {
+                    "primary_bone_axis": "Y",
+                    "secondary_bone_axis": "X",
+                    "bake_space_transform": False,
+                }
+            )
+        elif preset == "UNREAL":
             kwargs.update(
                 {
                     "primary_bone_axis": "Y",
@@ -206,6 +214,7 @@ def build_export_kwargs(
         "export_influence_nb": int(max_influences),
         "export_animations": True,
         "export_optimize_animation_size": False,
+        "export_yup": True,
     }
     return "GLTF", _filter_operator_kwargs(bpy.ops.export_scene.gltf, kwargs)
 
