@@ -127,5 +127,5 @@ class BBoneToBonesSettings(bpy.types.PropertyGroup):
         name="Export Path",
         description="File written by the export operator",
         subtype="FILE_PATH",
-        default="//rig_export.fbx",
+        default="rig_export.fbx",
     )

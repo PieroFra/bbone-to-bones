@@ -5,6 +5,9 @@ Every operator validates the context, relays the outcome through the reports
 and calls core; the math stays in core/.
 """
 
+import os
+import tempfile
+
 import bpy
 
 from .. import core
@@ -378,9 +381,16 @@ class BTOB_OT_export_rig(bpy.types.Operator):
             return {"CANCELLED"}
         try:
             settings = _settings(context)
-            path = self.filepath or with_preset_extension(
-                bpy.path.abspath(settings.export_path), settings.export_preset
-            )
+            raw_path = settings.export_path
+            if self.filepath:
+                path = self.filepath
+            else:
+                if not os.path.isabs(raw_path):
+                    if bpy.data.is_saved:
+                        raw_path = bpy.path.abspath(raw_path)
+                    else:
+                        raw_path = os.path.join(tempfile.gettempdir(), raw_path)
+                path = with_preset_extension(raw_path, settings.export_preset)
             if not path:
                 raise ValueError("Export path is empty")
             with _Progress(1) as progress:

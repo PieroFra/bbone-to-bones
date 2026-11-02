@@ -1,53 +1,56 @@
 # BBone to Bones
 
-![License](https://img.shields.io/badge/license-MIT-green) ![Blender](https://img.shields.io/badge/Blender-4.2%20%7C%205.x-orange) ![Tests](https://img.shields.io/badge/tests-22%2F22-brightgreen) ![Godot](https://img.shields.io/badge/Godot-4.7.2-blue) ![Unity](https://img.shields.io/badge/Unity-6000.6.6f1-black) ![Unreal](https://img.shields.io/badge/Unreal-round--trip-9cf)
+[![Blender](https://img.shields.io/badge/Blender-4.2%20LTS%20%7C%205.x-orange)](https://www.blender.org)
+[![License](https://img.shields.io/badge/License-GPL--3.0--or--later-blue)](LICENSE)
+[![Tests](https://img.shields.io/badge/Tests-22%2F22%20Passing-brightgreen)](tests/run.py)
+[![Godot](https://img.shields.io/badge/Godot-4.7.2%20%7C%204.3-478cbf)](tests/run.py)
+[![Unity](https://img.shields.io/badge/Unity-6000.6.6f1-black)](tests/run.py)
+[![Unreal](https://img.shields.io/badge/Unreal-FBX%20%26%20glTF-0e1128)](tests/run.py)
 
 ![BBone to Bones Demo](docs/demo.gif)
 
-Convert BBone (Bendy Bone) deform rig segments into real bones with fully automatic weight transfer, follow animation baking and game engine exports. Non-destructive: the original BBone rig stays untouched and you can always revert.
+Converts Blender Bendy Bones (B-Bones) into standard deforming bone chains with automatic weight transfer, animation baking, and game-engine export presets for **Unity**, **Unreal Engine**, and **Godot**.
 
 ## Key Features
 
-1. **Non-destructive `Revert to BBones`** (`btob.revert_to_bbones`): restore the original BBone rig at any time after conversion, verified in `do_fase5_ui_operators` of [`tests/run.py`](tests/run.py).
-2. **Curved joint boundary blending** (`_next_chain_segment_group` in [`core/weights.py`](core/weights.py)): curved joints blend vertex weights across segment boundaries exactly like the original BBone deforms, pose/bake error `< 0.001 m` (max delta `9.90e-07 m`), verified in `do_fase2_pose_equivalence` and `do_fase3_bake_30_frames` of [`tests/run.py`](tests/run.py).
-3. **One-click deform-only influence cap** (`btob.limit_influences`): limits influences on deform bones only and preserves non-deform groups like `ClothPin` and masks in one click, without having to switch the native operator subset to `Pose Bone Deform` manually, verified in `do_fase4_influence_limit` of [`tests/run.py`](tests/run.py).
-4. **Multi-Action / NLA Bake & Slotted Actions (Blender 4.2 / 5.x)**: `bake_all_actions` / the `All Actions` checkbox bakes every NLA track and strip into slotted Actions compatible with both Blender 4.2 and 5.x. Plus **Linear Skin (LBS)** (`disable_preserve_volume`): disables Dual Quaternion `Preserve Volume` on Armature modifiers at export to match game engines.
-5. **5 Engine Presets (`UNITY`, `UNITY_GLTF`, `UNREAL`, `UNREAL_GLTF`, `GODOT`) & `Rigging Suite` Auto-Tab**: exports `.fbx` and `.glb` (deform bones only, `add_leaf_bones=False` by default, `use_connect=False` segment chains) and automatically unifies under the **Rigging Suite** Sidebar tab when `CTRL_DEF` or `ACTD` are active.
+1. **Non-destructive `Revert to BBones`** (`btob.revert_to_bbones`): deletes generated segment bones and transfers skin weights back onto the original bendy bones at any time (verified in [`tests/run.py`](tests/run.py)).
+2. **Curved joint boundary blending**: blends the last segment endpoint onto the connected child bone's first segment ([`core/weights.py`](core/weights.py)), keeping posed and baked vertex positions within `< 0.001 m` of the source B-Bone deformation (`9.90e-07 m` max delta in [`tests/run.py`](tests/run.py)).
+3. **One-click deform-only influence cap** (`btob.limit_influences`): caps per-vertex weights on deform bones only and preserves non-deform vertex groups (`ClothPin`, masks, physics pins) in one click, without having to switch Blender's native `Limit Total` subset to `Pose Bone Deform` manually ([`tests/run.py`](tests/run.py)).
+4. **Multi-Action / NLA Bake & Linear Skin (LBS)**:
+   - **All Actions** (`bake_all_actions`): bakes and exports every armature Action and NLA strip, with full support for Blender 4.2 Actions and Blender 5.x Slotted Actions ([`core/bake.py`](core/bake.py)).
+   - **Linear Skin (LBS)** (`disable_preserve_volume`): turns off Dual Quaternion `Preserve Volume` on Armature modifiers at export so Blender matches the Linear Blend Skinning used by game engines ([`core/export.py`](core/export.py)).
+5. **5 Engine Export Presets & `Rigging Suite` Auto-Tab**:
+   - Presets: `UNITY` (FBX), `UNITY_GLTF` (`.glb`), `UNREAL` (FBX), `UNREAL_GLTF` (`.glb`), and `GODOT` (`.glb`), exporting deform bones only (`add_leaf_bones=False` by default, `use_connect=False` segment chains).
+   - Automatically unifies under the **Rigging Suite** Sidebar tab when installed alongside `CTRL_DEF` or `ACTD` ([`ui/panel.py`](ui/panel.py)).
 
 ## Usage (3D Viewport > Sidebar > BBone to Bones / Rigging Suite)
 
-1. **Convert Segments**: turn each BBone segment chain into real bones (optionally limited to the current selection with `Selected Bones Only`).
-2. **Transfer Weights**: copy vertex weights from the BBone rig to the new bones with curved joint boundary blending.
-3. **Add Follow / Bake Animation**: recreate BBone follow behavior or bake animation, either the current Action only or every NLA Action with `All Actions`.
-4. **Export Rig**: pick one of the 5 engine presets and export.
+1. **Convert Segments** (`btob.convert_segments`) - replaces each bendy bone with a chain of `<name>_seg_00..XX` deform bones (or only the current selection when **Selected Bones Only** is enabled).
+2. **Transfer Weights** (`btob.transfer_weights`) - splits and normalizes skin weights from the bendy bones onto the segment chains with curved joint boundary blending.
+3. **Add Follow / Bake Animation** (`btob.add_constraints`, `btob.bake_animation`) - binds segment bones to the B-Bone curve and bakes keyframes across the active Action or **All Actions**.
+4. **Export Rig** (`btob.export_rig`) - caps influences, applies **Linear Skin (LBS)**, and exports `.fbx` or `.glb` using the chosen engine preset.
 
-Additional controls:
-
-- `Convert All`: convert every eligible BBone chain in the armature at once.
-- `Selected Bones Only`: restrict conversion to the selected bones.
-- `All Actions`: bake all Actions/NLA strips instead of the current one (Multi-Action / Slotted Actions).
-- `Linear Skin (LBS)`: force Linear Blend Skinning on export by disabling Dual Quaternion `Preserve Volume`.
-- `Revert to BBones`: non-destructive rollback to the original BBone rig.
+ Or click **Convert All** (`btob.convert_all`) to run steps 1-3 in a single operation, and **Revert to BBones** (`btob.revert_to_bbones`) whenever you want to return to the original B-Bone rig.
 
 ## Tested Versions & Engine Verification
 
-- **Blender**: `4.2.23 LTS` and `5.2.3 LTS` on Ubuntu & Windows ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)), plus `5.2.0 LTS` locally.
-- **Godot Engine**: `4.7.2-stable` (latest stable) and `4.3-stable` (headless `.glb` import, skeleton/skin/animation verification).
-- **Unity**: `6000.6.6f1` (`-batchmode` `.fbx` prefab, `SkinnedMeshRenderer`, 96 segment bones and `AnimationClip` verification).
-- **Unreal Engine**: `UNREAL` (`.fbx`) and `UNREAL_GLTF` (`.glb`) presets verified via round-trip reimport in [`tests/run.py`](tests/run.py) (`do_fase4_export_reimport`) and FBX/glTF inspection.
+- **Blender**: `4.2.23 LTS` and `5.2.3 LTS` on Ubuntu and Windows ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)), plus `5.2.0 LTS` locally.
+- **Godot Engine**: `4.7.2-stable` (latest stable) and `4.3-stable` (headless `.glb` import, skeleton, skin, and animation verification).
+- **Unity**: `6000.6.6f1` (`-batchmode` `.fbx` prefab, `SkinnedMeshRenderer`, 96 segment bones, and `AnimationClip` verification).
+- **Unreal Engine**: `UNREAL` (`.fbx`) and `UNREAL_GLTF` (`.glb`) presets verified via round-trip reimport in [`tests/run.py`](tests/run.py) and FBX/glTF inspection.
 
 ## Tests
 
-```bash
+Run the deterministic headless test suite (builds its own multi-chain B-Bone fixture in memory):
+
+```sh
 blender -b -noaudio --python tests/run.py
 ```
 
-Output: `RISULTATO passati=22 falliti=0 totale=22`
-
 ## Packaging & CI
 
-`package_release.ps1` builds the distributable zip:
-
-```text
-PACKAGE versione=0.1.0 file=13 py=10 docs=3
+```sh
+powershell -NoProfile -ExecutionPolicy Bypass -File .opencode\scripts\package_release.ps1 -OutputDir dist
 ```
+
+Builds `dist/bbone_to_bones-0.1.0.zip` alongside its `.sha256` checksum and file manifest, and validates clean installation in an isolated Blender profile.
