@@ -11,6 +11,8 @@ Converts Blender Bendy Bones (B-Bones) into standard deforming bone chains with 
 
 ![BBone to Bones Demo](docs/demo.gif)
 
+[Watch 1080p 60fps MP4 showcase](https://raw.githubusercontent.com/PieroFra/bbone-to-bones/main/docs/bbone_showcase_1080p.mp4)
+
 ## Quick Install
 
 1. Download [bbone_to_bones-0.1.0.zip](https://github.com/PieroFra/bbone-to-bones/releases/download/v0.1.0/bbone_to_bones-0.1.0.zip) from the [v0.1.0 Release](https://github.com/PieroFra/bbone-to-bones/releases/tag/v0.1.0).
