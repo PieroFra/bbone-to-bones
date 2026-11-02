@@ -7,9 +7,15 @@
 [![Unity](https://img.shields.io/badge/Unity-6000.6.6f1-black)](tests/run.py)
 [![Unreal](https://img.shields.io/badge/Unreal-FBX%20%26%20glTF-0e1128)](tests/run.py)
 
+Converts Blender Bendy Bones (B-Bones) into standard deforming bone chains with automatic weight transfer, animation baking, and game-engine export presets for **Unity**, **Unreal Engine**, and **Godot**.
+
 ![BBone to Bones Demo](docs/demo.gif)
 
-Converts Blender Bendy Bones (B-Bones) into standard deforming bone chains with automatic weight transfer, animation baking, and game-engine export presets for **Unity**, **Unreal Engine**, and **Godot**.
+## Quick Install
+
+1. Download [bbone_to_bones-0.1.0.zip](https://github.com/PieroFra/bbone-to-bones/releases/download/v0.1.0/bbone_to_bones-0.1.0.zip) from the [v0.1.0 Release](https://github.com/PieroFra/bbone-to-bones/releases/tag/v0.1.0).
+2. In Blender: `Edit > Preferences > Add-ons > Install from Disk` and select the zip.
+3. Enable **BBone to Bones** and open the `BBone to Bones` (or `Rigging Suite`) tab in the 3D Viewport Sidebar.
 
 ## Key Features
 
@@ -54,3 +60,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .opencode\scripts\package_re
 ```
 
 Builds `dist/bbone_to_bones-0.1.0.zip` alongside its `.sha256` checksum and file manifest, and validates clean installation in an isolated Blender profile.
+
+## Part of the Rigging Suite
+
+BBone to Bones is fully **standalone** with **zero dependencies**, but when installed alongside **CTRL_DEF** or **A.C.T.D.** the panels automatically unify under a single **Rigging Suite** Sidebar tab, so all three rigging tools share one workflow with no extra setup.
+
+What rigging or export step is still slowing you down? Open an issue with the workflow you want automated next.
