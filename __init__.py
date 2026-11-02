@@ -53,10 +53,13 @@ def register():
                 raise
     # Idempotent register(): safe under double registration.
     _register_settings()
+    # Companion add-ons may already be up: align the tabs of the suite.
+    _ui_module().sync_rigging_suite_tabs(unregistering=False)
 
 
 def unregister():
     # The Scene pointer must go before the PropertyGroup class it points at.
+    _ui_module().sync_rigging_suite_tabs(unregistering=True)
     _unregister_settings()
     for cls in reversed(CLASSES):
         try:

@@ -8,6 +8,11 @@ calls the operators of ui/operators.py. Every visible line stays short (at most
 
 import bpy
 
+# The panel lives in its own tab alone, or shares the tab with the companion
+# add-ons of the suite when at least one of them is active.
+DEFAULT_CATEGORY = "BBone to Bones"
+SUITE_CATEGORY = "Rigging Suite"
+
 
 class VIEW3D_PT_BBoneToBones(bpy.types.Panel):
     """Rig status plus the four sections of the pipeline."""
@@ -16,7 +21,7 @@ class VIEW3D_PT_BBoneToBones(bpy.types.Panel):
     bl_idname = "VIEW3D_PT_BBoneToBones"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "BBone to Bones"
+    bl_category = DEFAULT_CATEGORY
 
     def draw(self, context):
         layout = self.layout
@@ -34,6 +39,7 @@ class VIEW3D_PT_BBoneToBones(bpy.types.Panel):
         self.draw_follow(layout, settings)
         self.draw_pipeline(layout, arm_obj)
         self.draw_export(layout, settings)
+        self.draw_suite_bridge(layout)
 
     def draw_status(self, layout, arm_obj):
         """Armature name, bendy bones left, segments created and rigged meshes."""
@@ -100,3 +106,84 @@ class VIEW3D_PT_BBoneToBones(bpy.types.Panel):
         column.prop(settings, "export_path", text="")
         column.prop(settings, "add_leaf_bones")
         column.operator("btob.export_rig", text="Export Rig")
+
+    def draw_suite_bridge(self, layout):
+        """Quick handoff buttons when CTRL_DEF or ACTD are active."""
+        has_ctrl = getattr(bpy.types, "CTRLDEF_PT_panel", None) is not None
+        has_actd = getattr(bpy.types, "ACTD_PT_MainPanel", None) is not None
+        if not has_ctrl and not has_actd:
+            return
+        column = layout.column(align=True)
+        column.label(text="Rigging Suite", icon="LINKED")
+        if has_ctrl:
+            column.operator("ctrl_def.generate", text="Generate CTRL")
+            column.operator("ctrl_def.bind_actd", text="Bind CTRL to DEF")
+        if has_actd:
+            column.operator("actd.apply_transforms", text="Apply ACTD")
+
+
+def sync_rigging_suite_tabs(unregistering=False):
+    """Move the panels of the suite under one tab when companions are active."""
+    ctrl_cls = getattr(bpy.types, "CTRLDEF_PT_panel", None)
+    actd_names = (
+        "ACTD_PT_MainPanel",
+        "ACTD_PT_SubPanel_Advanced",
+        "ACTD_PT_SubPanel_Collections",
+        "ACTD_PT_SubPanel_Baking",
+        "ACTD_PT_SubPanel_Presets",
+    )
+    actd_classes = [getattr(bpy.types, name, None) for name in actd_names]
+    actd_classes = [cls for cls in actd_classes if cls is not None]
+
+    active_count = (
+        int(ctrl_cls is not None)
+        + int(bool(actd_classes))
+        + (0 if unregistering else 1)
+    )
+    use_suite = active_count >= 2
+
+    def _rebind_panels(classes, category, top_order=None):
+        """Re-register the panels under another category, only when needed."""
+        registered = [cls for cls in classes if getattr(cls, "is_registered", False)]
+        if not registered:
+            return
+        same_category = all(
+            getattr(cls, "bl_category", None) == category for cls in registered
+        )
+        same_order = all(
+            getattr(cls, "bl_order", None) == top_order
+            for cls in registered
+            if top_order is not None and not getattr(cls, "bl_parent_id", "")
+        )
+        if same_category and same_order:
+            return
+        for cls in reversed(registered):
+            bpy.utils.unregister_class(cls)
+        for cls in registered:
+            cls.bl_category = category
+            if top_order is not None and not getattr(cls, "bl_parent_id", ""):
+                cls.bl_order = top_order
+        for cls in registered:
+            bpy.utils.register_class(cls)
+
+    if ctrl_cls is not None:
+        _rebind_panels(
+            [ctrl_cls],
+            SUITE_CATEGORY if use_suite else "DEF Ctrl",
+            top_order=10 if use_suite else 0,
+        )
+    if actd_classes:
+        _rebind_panels(
+            actd_classes,
+            SUITE_CATEGORY if use_suite else "Auto Copy Transforms",
+            top_order=20 if use_suite else 0,
+        )
+    if not unregistering and getattr(VIEW3D_PT_BBoneToBones, "is_registered", False):
+        _rebind_panels(
+            [VIEW3D_PT_BBoneToBones],
+            SUITE_CATEGORY if use_suite else DEFAULT_CATEGORY,
+            top_order=30 if use_suite else 0,
+        )
+    if unregistering:
+        VIEW3D_PT_BBoneToBones.bl_category = DEFAULT_CATEGORY
+    return SUITE_CATEGORY if use_suite else DEFAULT_CATEGORY
