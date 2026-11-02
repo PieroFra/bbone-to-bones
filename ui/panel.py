@@ -85,6 +85,7 @@ class VIEW3D_PT_BBoneToBones(bpy.types.Panel):
         sub.prop(settings, "frame_start")
         sub.prop(settings, "frame_end")
         column.prop(settings, "frame_step")
+        column.prop(settings, "bake_all_actions", text="All Actions")
         column.prop(settings, "remove_constraints", text="Remove After Bake")
         column.operator("btob.bake_animation", text="Bake Animation")
 
@@ -105,6 +106,7 @@ class VIEW3D_PT_BBoneToBones(bpy.types.Panel):
         column.prop(settings, "export_preset", text="Preset")
         column.prop(settings, "export_path", text="")
         column.prop(settings, "add_leaf_bones")
+        column.prop(settings, "disable_preserve_volume", text="Linear Skin (LBS)")
         column.operator("btob.export_rig", text="Export Rig")
 
     def draw_suite_bridge(self, layout):

@@ -131,6 +131,28 @@ def limit_vertex_influences(
     return report
 
 
+def disable_preserve_volume(arm_obj, mesh_objs=None):
+    """Turn off Dual Quaternion (Preserve Volume) on the armature modifiers.
+
+    Game engines evaluate Linear Blend Skinning; leaving ``use_deform_preserve_volume``
+    enabled on the Blender Armature modifier makes the viewport deformation differ
+    from the exported FBX/glTF skin. Returns the names of the meshes whose modifier
+    was switched from True to False.
+    """
+    meshes = find_rigged_meshes(arm_obj) if mesh_objs is None else list(mesh_objs)
+    changed = []
+    for mesh_obj in meshes:
+        modified = False
+        for mod in getattr(mesh_obj, "modifiers", ()):
+            if getattr(mod, "type", "") == "ARMATURE" and getattr(mod, "object", None) == arm_obj:
+                if bool(getattr(mod, "use_deform_preserve_volume", False)):
+                    mod.use_deform_preserve_volume = False
+                    modified = True
+        if modified:
+            changed.append(mesh_obj.name)
+    return changed
+
+
 def _filter_operator_kwargs(op_callable, kwargs):
     """Keep only the keyword arguments the operator actually declares.
 
@@ -156,6 +178,7 @@ def build_export_kwargs(
     use_selection=True,
     add_leaf_bones=False,
     max_influences=DEFAULT_MAX_INFLUENCES,
+    export_all_actions=False,
 ):
     """Return ``(format, kwargs)`` for the exporter of ``preset``.
 
@@ -179,8 +202,8 @@ def build_export_kwargs(
             "use_armature_deform_only": True,
             "add_leaf_bones": bool(add_leaf_bones),
             "bake_anim": True,
-            "bake_anim_use_nla_strips": False,
-            "bake_anim_use_all_actions": False,
+            "bake_anim_use_nla_strips": bool(export_all_actions),
+            "bake_anim_use_all_actions": bool(export_all_actions),
             "bake_anim_simplify_factor": 0.0,
             "apply_scale_options": "FBX_SCALE_UNITS",
             "axis_forward": "-Z",
@@ -214,6 +237,7 @@ def build_export_kwargs(
         "export_influence_nb": int(max_influences),
         "export_animations": True,
         "export_optimize_animation_size": False,
+        "export_animation_mode": "ACTIONS" if export_all_actions else "ACTIVE_ACTIONS",
         "export_yup": True,
     }
     return "GLTF", _filter_operator_kwargs(bpy.ops.export_scene.gltf, kwargs)
@@ -226,6 +250,8 @@ def export_rig(
     mesh_objs=None,
     add_leaf_bones=False,
     max_influences=DEFAULT_MAX_INFLUENCES,
+    export_all_actions=False,
+    disable_preserve_vol=True,
 ):
     """Export ``arm_obj`` and its meshes with the flags of ``preset``.
 
@@ -236,9 +262,14 @@ def export_rig(
     the state it was found in, so the caller can keep working headless.
 
     Returns a report dict with ``armature``, ``meshes``, ``preset``, ``format``,
-    ``filepath``, ``add_leaf_bones``, ``max_influences`` and ``capped_vertices``.
+    ``filepath``, ``add_leaf_bones``, ``max_influences``, ``capped_vertices``,
+    ``export_all_actions`` and ``preserve_volume_disabled``.
     """
     meshes = find_rigged_meshes(arm_obj) if mesh_objs is None else list(mesh_objs)
+    if disable_preserve_vol:
+        pv_disabled = disable_preserve_volume(arm_obj, mesh_objs=meshes)
+    else:
+        pv_disabled = []
     cap_report = None
     if max_influences is not None:
         cap_report = limit_vertex_influences(
@@ -251,6 +282,7 @@ def export_rig(
         use_selection=True,
         add_leaf_bones=add_leaf_bones,
         max_influences=influence_cap,
+        export_all_actions=export_all_actions,
     )
 
     view_layer = bpy.context.view_layer
@@ -287,4 +319,6 @@ def export_rig(
         "add_leaf_bones": bool(add_leaf_bones),
         "max_influences": max_influences,
         "capped_vertices": 0 if cap_report is None else cap_report["capped_vertices"],
+        "export_all_actions": bool(export_all_actions),
+        "preserve_volume_disabled": pv_disabled,
     }

@@ -303,6 +303,7 @@ class BTOB_OT_bake_animation(bpy.types.Operator):
                     step=step,
                     bone_names=sources,
                     remove_constraints=settings.remove_constraints,
+                    bake_all_actions=settings.bake_all_actions,
                 )
                 progress.update(samples)
         except (ValueError, RuntimeError) as exc:
@@ -389,6 +390,8 @@ class BTOB_OT_export_rig(bpy.types.Operator):
                     preset=settings.export_preset,
                     add_leaf_bones=settings.add_leaf_bones,
                     max_influences=settings.max_influences,
+                    export_all_actions=settings.bake_all_actions,
+                    disable_preserve_vol=settings.disable_preserve_volume,
                 )
                 progress.update(1)
         except (ValueError, RuntimeError) as exc:
@@ -479,6 +482,7 @@ class BTOB_OT_convert_all(bpy.types.Operator):
                     step=int(settings.frame_step),
                     bone_names=pending,
                     remove_constraints=settings.remove_constraints,
+                    bake_all_actions=settings.bake_all_actions,
                 )
         except (ValueError, RuntimeError) as exc:
             self.report({"ERROR"}, str(exc))

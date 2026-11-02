@@ -88,6 +88,11 @@ class BBoneToBonesSettings(bpy.types.PropertyGroup):
         description="Delete the follow constraints once the bake is keyed",
         default=True,
     )
+    bake_all_actions: bpy.props.BoolProperty(
+        name="All Actions",
+        description="Bake and export every action of the armature instead of only the active one",
+        default=False,
+    )
     export_preset: bpy.props.EnumProperty(
         name="Engine Preset",
         description="Export flags of the target engine",
@@ -112,6 +117,11 @@ class BBoneToBonesSettings(bpy.types.PropertyGroup):
         name="Add Leaf Bones",
         description="Add the leaf bones of the FBX exporter (usually unwanted)",
         default=False,
+    )
+    disable_preserve_volume: bpy.props.BoolProperty(
+        name="Linear Skin (LBS)",
+        description="Turn off Preserve Volume on the Armature modifier before export to match game engines",
+        default=True,
     )
     export_path: bpy.props.StringProperty(
         name="Export Path",

@@ -756,7 +756,40 @@ def do_fase3_bake_30_frames():
                 max_error, worst, core.POSE_MATCH_MAX_ERROR
             )
         )
-    return "max error {0:.2e} m over {1} frames x 2 meshes".format(max_error, len(frames))
+    # Multi-action bake: a second action is baked and then dropped, so the
+    # tests that follow keep seeing the single-action state.
+    extra_act = bpy.data.actions.new("ExtraWalk")
+    previous_action = arm_obj.animation_data.action if arm_obj.animation_data else None
+    core.assign_armature_action(arm_obj, extra_act)
+    walk_bone = arm_obj.pose.bones["{0}A.000".format(CHAIN_PREFIX)]
+    walk_bone.rotation_mode = "QUATERNION"
+    for frame in (1, 10):
+        walk_bone.rotation_quaternion = (1.0, 0.0, 0.0, 0.0)
+        walk_bone.keyframe_insert("rotation_quaternion", frame=frame)
+    core.assign_armature_action(arm_obj, previous_action)
+    try:
+        multi_report = core.bake_segments_animation(
+            arm_obj,
+            frame_start=1,
+            frame_end=10,
+            step=5,
+            remove_constraints=True,
+            bake_all_actions=True,
+        )
+    finally:
+        bpy.data.actions.remove(extra_act)
+    if "ExtraWalk" not in multi_report["actions_baked"]:
+        raise AssertionError(
+            "actions_baked {0} does not carry ExtraWalk".format(multi_report["actions_baked"])
+        )
+    if len(multi_report["actions_baked"]) < 2:
+        raise AssertionError(
+            "actions_baked {0} has fewer than 2 entries".format(multi_report["actions_baked"])
+        )
+
+    return "max error {0:.2e} m over {1} frames x 2 meshes, {2} actions baked".format(
+        max_error, len(frames), len(multi_report["actions_baked"])
+    )
 
 
 def do_fase4_influence_limit():
@@ -870,6 +903,31 @@ def do_fase4_export_reimport():
     )
     checked = 0
     with tempfile.TemporaryDirectory() as tmp_dir:
+        # Linear skin gate: the export clears Preserve Volume on the mesh first.
+        target_mesh = meshes[0]
+        target_mod = None
+        for modifier in target_mesh.modifiers:
+            if modifier.type == "ARMATURE":
+                target_mod = modifier
+                break
+        if target_mod is None:
+            raise AssertionError("{0}: armature modifier missing".format(target_mesh.name))
+        target_mod.use_deform_preserve_volume = True
+        pv_path = os.path.join(tmp_dir, "preserve_volume.fbx")
+        pv_report = core.export_rig(arm_obj, pv_path, preset="UNITY")
+        if target_mesh.name not in pv_report["preserve_volume_disabled"]:
+            raise AssertionError(
+                "preserve_volume_disabled {0} does not carry {1}".format(
+                    pv_report["preserve_volume_disabled"], target_mesh.name
+                )
+            )
+        if target_mod.use_deform_preserve_volume is not False:
+            raise AssertionError(
+                "{0}: use_deform_preserve_volume still True after export".format(
+                    target_mesh.name
+                )
+            )
+
         for preset, filename in presets:
             path = os.path.join(tmp_dir, filename)
             report = core.export_rig(arm_obj, path, preset=preset)

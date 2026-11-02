@@ -36,7 +36,9 @@ from .weights import (  # noqa: E402  (same reason: keep constants first)
 from .bake import (  # noqa: E402  (same reason: keep constants first)
     CONSTRAINT_NAME,
     add_bbone_follow_constraints,
+    assign_armature_action,
     bake_segments_animation,
+    collect_armature_actions,
     remove_bbone_follow_constraints,
     select_only_segment_bones,
 )
@@ -46,6 +48,7 @@ from .export import (  # noqa: E402  (same reason: keep constants first)
     DEFAULT_MAX_INFLUENCES,
     EXPORT_PRESETS,
     build_export_kwargs,
+    disable_preserve_volume,
     export_rig,
     limit_vertex_influences,
 )
