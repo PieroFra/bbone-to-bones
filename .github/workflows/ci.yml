@@ -150,7 +150,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $lines = & ./.opencode/scripts/package_release.ps1 -OutputDir dist 2>&1 |
+          $lines = & ./scripts/package_release.ps1 -OutputDir dist 2>&1 |
             ForEach-Object { $_.ToString() }
           $code = $LASTEXITCODE
           $lines | ForEach-Object { Write-Host $_ }
@@ -192,7 +192,7 @@ jobs:
 
           $leaks = @($entries | Where-Object {
               $_ -notmatch '^bbone_to_bones/' -or
-              $_ -match '^bbone_to_bones/(tests|\.git|\.github|\.opencode|__pycache__|ci-logs|dist|docs)/'
+              $_ -match '^bbone_to_bones/(tests|scripts|\.git|\.github|__pycache__|ci-logs|dist|docs)/'
             })
           if ($leaks.Count -gt 0) { throw ('Development files inside the ZIP: ' + ($leaks -join ', ')) }
 

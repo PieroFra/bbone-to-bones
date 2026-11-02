@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$OutputDir = 'dist',
     [switch]$DryRun
 )
@@ -80,7 +80,7 @@ function Get-Sha256 {
 # 1. Radice e versione
 # ---------------------------------------------------------------------------
 
-$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $initPath = Join-Path $root '__init__.py'
 if (-not (Test-Path -LiteralPath $initPath)) { throw "Add-on non trovato: $initPath" }
 
@@ -174,7 +174,7 @@ try {
 
     # Nessun file di sviluppo dentro lo staging: niente di fuori root/core/ui.
     $leaks = @($staged | Where-Object {
-        $_.Rel -match '^(tests|docs|\.git|\.github|\.opencode|__pycache__|ci-logs|dist)/' -or
+        $_.Rel -match '^(tests|docs|\.git|\.github|scripts|__pycache__|ci-logs|dist)/' -or
         $_.Rel -in @('AGENTS.md', 'opencode.json', '.gitignore') -or
         $_.Rel -match '\.(pyc|pyo|log|txt|ps1|png|jpg|gif|blend|blend1|zip)$'
     } | ForEach-Object { $_.Rel })
