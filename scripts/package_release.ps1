@@ -140,7 +140,7 @@ foreach ($required in @('__init__.py', 'core/__init__.py', 'ui/__init__.py')) {
 # ---------------------------------------------------------------------------
 
 $stamp = Get-Date -Format 'yyyyMMdd_HHmmss'
-$stagingRoot = Join-Path ([IO.Path]::GetTempPath()) ("opencode\bbone_pkg\{0}_{1}" -f $stamp, [guid]::NewGuid().ToString('N').Substring(0, 8))
+$stagingRoot = Join-Path ([IO.Path]::GetTempPath()) ("bbone_pkg\{0}_{1}" -f $stamp, [guid]::NewGuid().ToString('N').Substring(0, 8))
 $pkgDir = Join-Path $stagingRoot 'bbone_to_bones'
 
 try {
@@ -175,7 +175,7 @@ try {
     # Nessun file di sviluppo dentro lo staging: niente di fuori root/core/ui.
     $leaks = @($staged | Where-Object {
         $_.Rel -match '^(tests|docs|\.git|\.github|scripts|__pycache__|ci-logs|dist)/' -or
-        $_.Rel -in @('AGENTS.md', 'opencode.json', '.gitignore') -or
+        $_.Rel -in @('.gitignore') -or
         $_.Rel -match '\.(pyc|pyo|log|txt|ps1|png|jpg|gif|blend|blend1|zip)$'
     } | ForEach-Object { $_.Rel })
     if ($leaks.Count -gt 0) {

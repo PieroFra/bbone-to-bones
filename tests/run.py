@@ -1018,17 +1018,16 @@ def do_fase4_export_reimport():
                     )
             checked += 1
 
-    # Real-engine gate: import the demo export in Godot 4.3 when both the Godot
-    # console exe and the check script exist locally (CI has neither, so it
-    # degrades there to a clean skip; locally the real check runs).
+    # Verifica reale in engine: importa l'export demo in Godot 4.3 quando esistono
+    # sia la console di Godot sia lo script di controllo (in CI mancano entrambi,
+    # quindi li' degrada a uno skip pulito; in locale gira il controllo vero).
     import subprocess
 
-    godot_tmp = os.path.join(
-        os.environ.get("TEMP", tempfile.gettempdir()), "opencode", "btob_gui"
-    )
+    godot_tmp = os.path.join(tempfile.gettempdir(), "btob_gui")
     godot_exe = r"C:\Users\checc\AppData\Local\Programs\Godot\Godot_v4.3-stable_win64_console.exe"
-    godot_check_script = os.path.expanduser(
-        os.path.join("~", ".config", "opencode", "scripts", "godot_import_check.py")
+    godot_check_script = os.environ.get(
+        "GODOT_IMPORT_CHECK",
+        os.path.join(tempfile.gettempdir(), "godot_import_check.py"),
     )
     godot_glb_path = os.path.join(godot_tmp, "demo_export.glb")
     engine_note = ""

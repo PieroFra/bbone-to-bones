@@ -30,13 +30,10 @@ paths_exclude_pattern = [
   "__pycache__/",
   "/.git/",
   "/.github/",
-  "/.opencode/",
   "/tests/",
   "/docs/",
   "/dist/",
   "/ci-logs/",
   "/*.blend",
   "/*.blend1",
-  "/AGENTS.md",
-  "/opencode.json",
 ]
