@@ -6,6 +6,7 @@
 [![Godot](https://img.shields.io/badge/Godot-4.7.2%20%7C%204.3-478cbf)](tests/run.py)
 [![Unity](https://img.shields.io/badge/Unity-6000.6.6f1-black)](tests/run.py)
 [![Unreal](https://img.shields.io/badge/Unreal-FBX%20%26%20glTF-0e1128)](tests/run.py)
+[![Downloads](https://img.shields.io/github/downloads/PieroFra/bbone-to-bones/total?label=downloads)](https://github.com/PieroFra/bbone-to-bones/releases)
 
 Converts Blender Bendy Bones (B-Bones) into standard deforming bone chains with automatic weight transfer, animation baking, and game-engine export presets for **Unity**, **Unreal Engine**, and **Godot**.
 
@@ -55,11 +56,11 @@ Run the deterministic headless test suite (builds its own multi-chain B-Bone fix
 blender -b -noaudio --python tests/run.py
 ```
 
-## Packaging & CI
+## Packaging
 
-```sh
-powershell -NoProfile -ExecutionPolicy Bypass -File .opencode\scripts\package_release.ps1 -OutputDir dist
-```
+Building the release archives is a local step: the add-on folder is staged and
+zipped, the checksum and the file manifest are written next to it, and the
+result is validated with a clean install in an isolated Blender profile.
 
 Builds `dist/bbone_to_bones-0.1.0.zip` alongside its `.sha256` checksum and file manifest, and validates clean installation in an isolated Blender profile.
 
@@ -68,3 +69,5 @@ Builds `dist/bbone_to_bones-0.1.0.zip` alongside its `.sha256` checksum and file
 BBone to Bones is fully **standalone** with **zero dependencies**, but when installed alongside **CTRL_DEF** or **A.C.T.D.** the panels automatically unify under a single **Rigging Suite** Sidebar tab, so all three rigging tools share one workflow with no extra setup.
 
 What rigging or export step is still slowing you down? Open an issue with the workflow you want automated next.
+
+Developed with AI assistance under the author's direction, review, and responsibility.

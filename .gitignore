@@ -8,3 +8,9 @@ dist/
 
 ci-logs/
 
+# Note e configurazione locali (non pubbliche)
+AGENTS.md
+opencode.json
+.opencode/
+PUBLISHING_PLAN.md
+
