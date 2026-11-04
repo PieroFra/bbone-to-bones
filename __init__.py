@@ -12,7 +12,7 @@ Package layout:
 bl_info = {
     "name": "BBone to Bones",
     "author": "Piero Fra",
-    "version": (0, 1, 1),
+    "version": (0, 2, 0),
     "blender": (4, 2, 0),
     "location": "3D Viewport > Sidebar > BBone to Bones",
     "description": "Converts bendy bones into real bone chains, with weights, "

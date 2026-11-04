@@ -8,7 +8,7 @@
 [![Unreal](https://img.shields.io/badge/Unreal-FBX%20%26%20glTF-0e1128)](tests/run.py)
 [![Downloads](https://img.shields.io/github/downloads/PieroFra/bbone-to-bones/total?label=downloads)](https://github.com/PieroFra/bbone-to-bones/releases)
 
-Converts Blender Bendy Bones (B-Bones) into standard deforming bone chains with automatic weight transfer, animation baking, and game-engine export presets for **Unity**, **Unreal Engine**, and **Godot**.
+Converts Blender Bendy Bones (B-Bones) into standard deform bone chains, with automatic weight transfer, animation baking, and export presets for **Unity**, **Unreal Engine**, and **Godot**.
 
 ![BBone to Bones Demo](docs/demo.gif)
 
@@ -16,7 +16,7 @@ Converts Blender Bendy Bones (B-Bones) into standard deforming bone chains with 
 
 ## Quick Install
 
-1. Download [bbone_to_bones-0.1.1.zip](https://github.com/PieroFra/bbone-to-bones/releases/download/v0.1.1/bbone_to_bones-0.1.1.zip) from the [v0.1.1 Release](https://github.com/PieroFra/bbone-to-bones/releases/tag/v0.1.1).
+1. Download [bbone_to_bones-0.2.0.zip](https://github.com/PieroFra/bbone-to-bones/releases/download/v0.2.0/bbone_to_bones-0.2.0.zip) from the [v0.2.0 Release](https://github.com/PieroFra/bbone-to-bones/releases/tag/v0.2.0).
 2. In Blender: `Edit > Preferences > Add-ons > Install from Disk` and select the zip.
 3. Enable **BBone to Bones** and open the `BBone to Bones` tab in the 3D Viewport Sidebar.
 
@@ -40,6 +40,32 @@ Converts Blender Bendy Bones (B-Bones) into standard deforming bone chains with 
 
  Or click **Convert All** (`btob.convert_all`) to run steps 1-3 in a single operation, and **Revert to BBones** (`btob.revert_to_bbones`) whenever you want to return to the original B-Bone rig.
 
+## Screenshots
+
+![BBone to Bones UI (IT)](docs/screenshots/btob-ui-it.png)
+
+![BBone to Bones UI (EN)](docs/screenshots/btob-ui-en.png)
+
+![Before: Bendy Bones](docs/screenshots/01_before_bbone.png)
+
+![After: Convert All](docs/screenshots/02_after_convert_all.png)
+
+![Sidebar Panel](docs/screenshots/03_sidebar_panel.png)
+
+![Convert Segments (frame 01)](docs/screenshots/step_04_convert_segments_f01.png)
+
+![Follow Constraints (frame 20)](docs/screenshots/step_05_follow_constraints_f20.png)
+
+![Baked Animation (frame 10)](docs/screenshots/step_06_baked_f10.png)
+
+![Exported & Reimported](docs/screenshots/step_09_exported_reimported.png)
+
+![Godot: FBX (Unity)](docs/screenshots/godot_03_fbx_unity.png)
+
+![Unity: Unreal FBX posed](docs/screenshots/unity_03_unreal_fbx_posed.png)
+
+![Unreal: posed top bones](docs/screenshots/ue_04_posed_top_bones.png)
+
 ## Tested Versions & Engine Verification
 
 - **Blender**: `4.2.23 LTS` and `5.2.3 LTS` on Ubuntu and Windows ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)), plus `5.2.0 LTS` locally.
@@ -61,12 +87,12 @@ Building the release archives is a local step: the add-on folder is staged and
 zipped, the checksum and the file manifest are written next to it, and the
 result is validated with a clean install in an isolated Blender profile.
 
-Builds `dist/bbone_to_bones-0.1.1.zip` alongside its `.sha256` checksum and file manifest, and validates clean installation in an isolated Blender profile.
+Builds `dist/bbone_to_bones-0.2.0.zip` alongside its `.sha256` checksum and file manifest, and validates clean installation in an isolated Blender profile. The images in `docs/screenshots/` are documentation only and do not enter the zip.
 
 ## Part of the Rigging Suite
 
 BBone to Bones is fully **standalone** with **zero dependencies**: it keeps its own `BBone to Bones` Sidebar tab. When installed alongside **CTRL_DEF** or **A.C.T.D.** the panel adds quick handoff buttons (`Generate CTRL`, `Bind CTRL to DEF`, `Apply ACTD`), so all three rigging tools share one workflow with no extra setup.
 
-What rigging or export step is still slowing you down? Open an issue with the workflow you want automated next.
+If a rigging or export step slows you down, open an issue with the workflow you want automated next.
 
 Developed with AI assistance under the author's direction, review, and responsibility.

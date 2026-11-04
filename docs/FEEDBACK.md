@@ -1,6 +1,6 @@
 # Feedback - BBone to Bones
 
-This file collects user feedback from all channels: GitHub issues, Blender Extensions reviews, forum threads and private messages. One entry per item, newest first. Paste verbatim, do not paraphrase: the triage step works on the original words.
+This file collects user feedback from all channels: GitHub issues, Blender Extensions reviews, forum threads, and private messages. One entry per item, newest first. Paste verbatim, do not paraphrase. The triage step works on the original words.
 
 ---
 

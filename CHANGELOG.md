@@ -4,6 +4,18 @@ All notable changes to BBone to Bones are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-11-04
+
+### Added
+
+- Conversione predefinita delle sole ossa deformanti con `deform_bones_only`
+- Opzione `add_live_follow` per i follow constraint immediati
+- Refactor modulare: `core/revert.py`, `ui/operator_*`
+
+### Changed
+
+- Umanizzazione della documentazione
+
 ## [0.1.1] - 2026-11-04
 
 ### Removed
@@ -18,7 +30,7 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Docs
 
-- Added the GitHub downloads badge, cleaned up install and packaging sections.
+- Added the GitHub downloads badge and cleaned up the install and packaging sections.
 
 ## [0.1.0] - 2026-11-02
 

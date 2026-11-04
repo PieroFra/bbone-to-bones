@@ -49,6 +49,16 @@ class BBoneToBonesSettings(bpy.types.PropertyGroup):
         description="Operate only on the bendy bones currently selected in Pose or Object mode",
         default=False,
     )
+    deform_bones_only: bpy.props.BoolProperty(
+        name="Deform Bones Only",
+        description="Convert only bendy bones with Deform enabled (skips MCH/helper bendy bones)",
+        default=True,
+    )
+    add_live_follow: bpy.props.BoolProperty(
+        name="Add Live Follow Constraints",
+        description="Attach BTOB_FollowBBone constraints right after conversion for live viewport preview",
+        default=True,
+    )
     normalize_deform: bpy.props.BoolProperty(
         name="Normalize Deform Weights",
         description="Scale the deform weights of every vertex back to 1.0",

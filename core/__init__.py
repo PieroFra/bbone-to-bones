@@ -8,7 +8,7 @@ this code; they must never implement math themselves.
 
 # Single source of truth for the package version (mirrors blender_manifest.toml
 # and bl_info in ../__init__.py; keep all three in sync on every release).
-VERSION = (0, 1, 1)
+VERSION = (0, 2, 0)
 
 # Tolerances used by the numeric contract between the conversion and its tests.
 HEAD_MATCH_TOLERANCE = 1e-5  # Fase 1: segment heads on the bbone curve.
@@ -19,9 +19,9 @@ from .segments import (  # noqa: E402  (after the shared constants on purpose)
     collect_segment_specs,
     convert_bbones_to_segments,
     is_convertible_bone,
-    revert_segments_to_bbones,
     segment_bone_name,
 )
+from .revert import revert_segments_to_bbones  # noqa: E402  (Fase 1 revert)
 
 # Public Fase 2 API: skin weights of the bbones -> converted segment bones.
 from .weights import (  # noqa: E402  (same reason: keep constants first)

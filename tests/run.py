@@ -202,11 +202,8 @@ def do_registration():
     """The package imports, registers and unregisters itself."""
     import importlib
 
-    package_dir = os.path.dirname(ROOT)
     package_name = os.path.basename(ROOT)
-    if package_dir not in sys.path:
-        sys.path.insert(0, package_dir)
-    mod = importlib.import_module(package_name)
+    mod = _addon_module()
     try:
         mod.register()
     finally:
@@ -238,13 +235,31 @@ def do_license():
     return "LICENSE GPL-3 present"
 
 
-def _core():
-    """Import the headless core package (addon root on sys.path, no UI)."""
-    if ROOT not in sys.path:
-        sys.path.insert(0, ROOT)
-    import core
+def _addon_module():
+    """Load the add-on package from ROOT (never a stale copy in AppData)."""
+    import importlib
 
-    return core
+    package_dir = os.path.dirname(ROOT)
+    pkg_name = os.path.basename(ROOT)
+    if sys.path[:1] != [package_dir]:
+        if package_dir in sys.path:
+            sys.path.remove(package_dir)
+        sys.path.insert(0, package_dir)
+    existing = sys.modules.get(pkg_name)
+    if existing is not None:
+        mod_file = os.path.abspath(getattr(existing, "__file__", "") or "")
+        if not mod_file.startswith(os.path.abspath(ROOT)):
+            for key in [k for k in list(sys.modules) if k == pkg_name or k.startswith(pkg_name + ".")]:
+                del sys.modules[key]
+    return importlib.import_module(pkg_name)
+
+
+def _core():
+    """Import the headless core package from ROOT."""
+    _addon_module()
+    import importlib
+
+    return importlib.import_module("{0}.core".format(os.path.basename(ROOT)))
 
 
 def _segment_count():
@@ -1067,10 +1082,7 @@ def do_fase5_ui_operators():
 
     import bpy
 
-    package_dir = os.path.dirname(ROOT)
-    if package_dir not in sys.path:
-        sys.path.insert(0, package_dir)
-    mod = importlib.import_module(os.path.basename(ROOT))
+    mod = _addon_module()
 
     _scene, arm_obj, meshes = build()
     try:
@@ -1243,6 +1255,230 @@ def do_fase5_ui_operators():
     )
 
 
+def _add_distant_child(arm_obj, parent_name, child_name, offset):
+    """Add a deform child detached from the parent tail (weighted at a distance)."""
+    import bpy
+    from mathutils import Vector
+
+    view_layer = bpy.context.view_layer
+    previous_active = view_layer.objects.active
+    view_layer.objects.active = arm_obj
+    arm_obj.select_set(True)
+    bpy.ops.object.mode_set(mode="EDIT")
+    try:
+        edit_bones = arm_obj.data.edit_bones
+        parent = edit_bones[parent_name]
+        child = edit_bones.new(child_name)
+        child.head = parent.tail + Vector(offset)
+        child.tail = child.head + Vector((0.0, 0.0, 0.1))
+        child.parent = parent
+        child.use_connect = False
+        child.use_deform = True
+    finally:
+        bpy.ops.object.mode_set(mode="OBJECT")
+        if previous_active is not None and previous_active != arm_obj:
+            view_layer.objects.active = previous_active
+
+
+def do_george_pose_distant_child():
+    """A deform child weighted at a distance from a posed bbone follows its last segment."""
+    import bpy
+
+    core = _core()
+    scene, arm_obj, meshes = build()
+    high, low = meshes[0], meshes[1]
+    _distribute_chains(arm_obj, high)
+    _distribute_chains(arm_obj, low)
+
+    # Half of the weight goes to the distant child: the mesh is no longer rigid on the chain.
+    child_name = "GeorgeDistChild"
+    _add_distant_child(arm_obj, "{0}B.002".format(CHAIN_PREFIX), child_name, (0.0, 0.25, 0.0))
+    for mesh_obj in (high, low):
+        for vertex in mesh_obj.data.vertices:
+            for element in vertex.groups:
+                element.weight = 0.5
+        group = mesh_obj.vertex_groups.get(child_name)
+        if group is None:
+            group = mesh_obj.vertex_groups.new(name=child_name)
+        group.add(list(range(len(mesh_obj.data.vertices))), 0.5, "REPLACE")
+    bpy.context.view_layer.update()
+
+    scene.frame_set(SCENE_FRAME_END)
+    before = (_evaluated_vertices(high), _evaluated_vertices(low))
+
+    scene.frame_set(SCENE_FRAME_START)
+    core.convert_bbones_to_segments(arm_obj)
+    core.transfer_bbone_weights(arm_obj)
+
+    scene.frame_set(SCENE_FRAME_END)
+    core.pose_segments_from_bbones(arm_obj)
+    bpy.context.view_layer.update()
+    after = (_evaluated_vertices(high), _evaluated_vertices(low))
+
+    max_error = 0.0
+    worst = ""
+    for before_coords, after_coords, mesh_obj in zip(before, after, (high, low)):
+        if len(before_coords) != len(after_coords):
+            raise AssertionError(
+                "{0}: {1} -> {2} vertices".format(mesh_obj.name, len(before_coords), len(after_coords))
+            )
+        for index, (start, end) in enumerate(zip(before_coords, after_coords)):
+            error = (start - end).length
+            if error > max_error:
+                max_error = error
+                worst = "{0}[{1}]".format(mesh_obj.name, index)
+    if max_error >= core.POSE_MATCH_MAX_ERROR:
+        raise AssertionError(
+            "distant child {0}: max error {1:.3e} m at {2} >= {3:.1e}".format(
+                child_name, max_error, worst, core.POSE_MATCH_MAX_ERROR
+            )
+        )
+    return "distant child max error {0:.2e} m over {1} meshes".format(max_error, len(before))
+
+
+def _add_standalone_bone(arm_obj, name, segments, use_deform):
+    """Add a standalone bendy bone (no parent, no mesh) before the conversion."""
+    import bpy
+
+    view_layer = bpy.context.view_layer
+    previous_active = view_layer.objects.active
+    view_layer.objects.active = arm_obj
+    arm_obj.select_set(True)
+    bpy.ops.object.mode_set(mode="EDIT")
+    try:
+        edit_bone = arm_obj.data.edit_bones.new(name)
+        edit_bone.head = (5.0, 0.0, 2.0)
+        edit_bone.tail = (5.0, 0.0, 2.8)
+        edit_bone.use_deform = use_deform
+    finally:
+        bpy.ops.object.mode_set(mode="OBJECT")
+        if previous_active is not None and previous_active != arm_obj:
+            view_layer.objects.active = previous_active
+    arm_obj.data.bones[name].bbone_segments = segments
+    bpy.context.view_layer.update()
+
+
+def do_george_rig_safeguards():
+    """Rigs like GeorgeRIG keep MCH helpers, local children and collections intact."""
+    core = _core()
+    constraint_name = core.CONSTRAINT_NAME
+
+    # 1a. The default conversion skips non deforming helper bones.
+    _scene, arm_obj, _ = build()
+    _add_standalone_bone(arm_obj, "MCH_Helper", 4, False)
+    core.convert_bbones_to_segments(arm_obj)
+    bones = arm_obj.data.bones
+    helper = bones.get("MCH_Helper")
+    if helper is None:
+        raise AssertionError("MCH_Helper disappeared during the conversion")
+    if helper.use_deform:
+        raise AssertionError("MCH_Helper must keep use_deform=False")
+    if core.segment_bone_name("MCH_Helper", 0) in bones:
+        raise AssertionError("deform_only=True must not convert MCH_Helper")
+    core.revert_segments_to_bbones(arm_obj)
+    helper = arm_obj.data.bones.get("MCH_Helper")
+    if helper is None:
+        raise AssertionError("MCH_Helper disappeared after revert")
+    if helper.use_deform:
+        raise AssertionError("revert must not enable use_deform on MCH_Helper")
+
+    # 1b. A forced conversion keeps use_deform off on segments and on the source.
+    _scene, arm_obj, _ = build()
+    _add_standalone_bone(arm_obj, "MCH_Helper", 4, False)
+    core.convert_bbones_to_segments(arm_obj, deform_only=False)
+    bones = arm_obj.data.bones
+    for index in range(4):
+        name = core.segment_bone_name("MCH_Helper", index)
+        segment = bones.get(name)
+        if segment is None:
+            raise AssertionError("forced conversion: {0} missing".format(name))
+        if segment.use_deform:
+            raise AssertionError("{0} must inherit use_deform=False".format(name))
+    core.revert_segments_to_bbones(arm_obj)
+    helper = arm_obj.data.bones.get("MCH_Helper")
+    if helper is None:
+        raise AssertionError("forced conversion: MCH_Helper disappeared after revert")
+    if helper.use_deform:
+        raise AssertionError("forced conversion: revert enabled use_deform on MCH_Helper")
+
+    # 2. A child driven by COPY_TRANSFORMS in LOCAL space keeps its parent.
+    _scene, arm_obj, _ = build()
+    tip_source = "{0}B.003".format(CHAIN_PREFIX)
+    _add_tip_child(arm_obj, tip_source, "DEF_Forearm_Test")
+    _add_tip_child(arm_obj, tip_source)
+    constraint = arm_obj.pose.bones["DEF_Forearm_Test"].constraints.new("COPY_TRANSFORMS")
+    constraint.owner_space = "LOCAL"
+    report = core.convert_bbones_to_segments(arm_obj)
+    bones = arm_obj.data.bones
+    defended_parent = getattr(bones["DEF_Forearm_Test"].parent, "name", None)
+    if defended_parent != tip_source:
+        raise AssertionError(
+            "DEF_Forearm_Test parent {0} != {1}".format(defended_parent, tip_source)
+        )
+    if "DEF_Forearm_Test" in report["reparented_children"]:
+        raise AssertionError("DEF_Forearm_Test must not be reported as reparented")
+    expected_tip = core.segment_bone_name(tip_source, BBONE_SEGMENTS - 1)
+    tip_child_parent = getattr(bones["TipChild"].parent, "name", None)
+    if tip_child_parent != expected_tip:
+        raise AssertionError(
+            "TipChild parent {0} != {1}".format(tip_child_parent, expected_tip)
+        )
+
+    # 3. The bone collections of the source are inherited by its segments.
+    _scene, arm_obj, _ = build()
+    source_a = "{0}A.000".format(CHAIN_PREFIX)
+    collection = arm_obj.data.collections.new("DEFS")
+    collection.assign(arm_obj.data.bones[source_a])
+    core.convert_bbones_to_segments(arm_obj)
+    bones = arm_obj.data.bones
+    for index in range(BBONE_SEGMENTS):
+        name = core.segment_bone_name(source_a, index)
+        bone = bones[name]
+        if len(bone.collections) == 0:
+            raise AssertionError("{0} carries no bone collection".format(name))
+        if "DEFS" not in [coll.name for coll in bone.collections]:
+            raise AssertionError("{0} is not in the DEFS collection".format(name))
+
+    # 4. The UI operator adds the live follow constraint right after conversion.
+    import importlib
+
+    import bpy
+
+    mod = _addon_module()
+    _scene, arm_obj, _ = build()
+    try:
+        mod.register()
+        settings = getattr(bpy.context.scene, "bbone_to_bones_settings", None)
+        if settings is None:
+            raise AssertionError("bbone_to_bones_settings missing after register")
+        settings.selected_bones_only = False
+        settings.deform_bones_only = True
+        settings.add_live_follow = True
+        bpy.context.view_layer.objects.active = arm_obj
+        result = bpy.ops.btob.convert_segments()
+        if result != {"FINISHED"}:
+            raise AssertionError("btob.convert_segments returned {0}".format(sorted(result)))
+        segments = [bone.name for bone in arm_obj.data.bones if "_seg_" in bone.name]
+        if len(segments) != _segment_count():
+            raise AssertionError(
+                "live follow converted {0} segments != {1}".format(
+                    len(segments), _segment_count()
+                )
+            )
+        for name in segments:
+            if arm_obj.pose.bones[name].constraints.get(constraint_name) is None:
+                raise AssertionError("{0} has no {1} constraint".format(name, constraint_name))
+    finally:
+        mod.unregister()
+
+    return (
+        "MCH skipped and kept non-deform, LOCAL child kept, "
+        "{0} segments inherited DEFS, {1} live follow constraints".format(
+            BBONE_SEGMENTS, len(segments)
+        )
+    )
+
+
 # --- runner -----------------------------------------------------------------
 
 
@@ -1279,6 +1515,8 @@ def main():
     check("fase4_limite_influenze", do_fase4_influence_limit)
     check("fase4_export_reimport", do_fase4_export_reimport)
     check("fase5_ui_operators", do_fase5_ui_operators)
+    check("george_rig_safeguards", do_george_rig_safeguards)
+    check("george_pose_distant_child", do_george_pose_distant_child)
 
     print("BTOB addon={0} blender={1}".format(os.path.basename(ROOT), bpy.app.version_string))
     for name, passed, detail in RESULTS:

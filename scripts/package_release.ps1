@@ -27,8 +27,8 @@ $ErrorActionPreference = 'Stop'
 $ZipEpoch = [DateTimeOffset]::new(2000, 1, 1, 0, 0, 0, [TimeSpan]::Zero)
 $BlenderBin = 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe'
 
-# Contratto di packaging: 10 .py (radice, core\, ui\ + manifest) e 3 doc/meta.
-$ExpectedPy = 10
+# Contratto di packaging: 16 .py (radice, core\, ui\ + manifest) e 3 doc/meta.
+$ExpectedPy = 16
 $ExpectedDocs = 3
 $IncludeDocs = @('blender_manifest.toml', 'LICENSE', 'README.md')
 

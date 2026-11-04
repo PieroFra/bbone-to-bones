@@ -45,7 +45,7 @@ It is free and open source. Repo: https://github.com/PieroFra/bbone-to-bones
 
 If you hit a bug or want a feature, the issue tracker is the fastest path: https://github.com/PieroFra/bbone-to-bones/issues
 
-Feedback from riggers and indies doing Unity/Unreal/Godot pipelines is very welcome.
+Feedback from riggers and indies on Unity/Unreal/Godot pipelines is welcome.
 
 ---
 
@@ -61,7 +61,7 @@ Bendy bones are great for animating in Blender, but the moment you export to Uni
 
 BBone to Bones converts a bendy bone chain into a chain of standard bones whose joint positions follow the original curve, with deviation measured under 0.001 m on my test rigs. The generated chain is capped to deform-only influence so engine weights stay clean. It bakes your animation onto the new chain across multiple actions, including the newer Slotted Actions. The original bendy bone rig is preserved: one click reverts to it, so nothing about the conversion is destructive. There are also built-in export presets for UNITY, UNITY_GLTF, UNREAL, UNREAL_GLTF and GODOT.
 
-Testing focus: rigs with several stacked bbone chains, animation-heavy characters, and engines that are picky about bone naming. If someone here has a gnarly rig and wants to stress-test it, that feedback would be gold.
+Testing focus: rigs with several stacked bbone chains, animation-heavy characters, and engines that are picky about bone naming. If someone here has a gnarly rig and wants to stress-test it, send it over.
 
 GitHub repo and issue tracker are in my comment below.
 

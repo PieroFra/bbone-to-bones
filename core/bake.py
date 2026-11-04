@@ -57,14 +57,19 @@ def _source_names(arm_obj, bone_names=None):
     """
     bones = arm_obj.data.bones
     if bone_names is None:
-        return [bone.name for bone in bones if is_convertible_bone(bone)]
+        return [
+            bone.name
+            for bone in bones
+            if segment_bone_name(bone.name, 0) in bones
+            or is_convertible_bone(bone, deform_only=True)
+        ]
     sources = []
     for name in bone_names:
         if name not in bones:
             raise ValueError(
                 "bone '{0}' not found in armature '{1}'".format(name, arm_obj.name)
             )
-        if is_convertible_bone(bones[name]):
+        if is_convertible_bone(bones[name], deform_only=False):
             sources.append(name)
     return sources
 
