@@ -20,8 +20,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Packaging contract: 10 .py modules plus 3 doc/meta files ship in the ZIP.
-  EXPECTED_PY: "10"
+  # Packaging contract: 16 .py modules plus 3 doc/meta files ship in the ZIP.
+  EXPECTED_PY: "16"
   EXPECTED_DOCS: "3"
 
 jobs:
