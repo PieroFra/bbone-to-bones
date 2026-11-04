@@ -17,7 +17,7 @@ from .operators import (
     BTOB_OT_revert_to_bbones,
     BTOB_OT_transfer_weights,
 )
-from .panel import VIEW3D_PT_BBoneToBones, sync_rigging_suite_tabs
+from .panel import VIEW3D_PT_BBoneToBones
 
 # Registration order matters: the PropertyGroup comes first, because the panel
 # and the operators read it. The panel is last, it only draws.
@@ -47,6 +47,5 @@ __all__ = [
     "BTOB_OT_convert_all",
     "BTOB_OT_revert_to_bbones",
     "VIEW3D_PT_BBoneToBones",
-    "sync_rigging_suite_tabs",
     "CLASSES",
 ]

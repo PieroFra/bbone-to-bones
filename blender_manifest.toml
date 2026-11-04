@@ -17,7 +17,6 @@ license = [
 blender_version_min = "4.2.0"
 
 tags = [
-  "Animation",
   "Rigging",
 ]
 

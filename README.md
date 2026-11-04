@@ -18,7 +18,7 @@ Converts Blender Bendy Bones (B-Bones) into standard deforming bone chains with 
 
 1. Download [bbone_to_bones-0.1.0.zip](https://github.com/PieroFra/bbone-to-bones/releases/download/v0.1.0/bbone_to_bones-0.1.0.zip) from the [v0.1.0 Release](https://github.com/PieroFra/bbone-to-bones/releases/tag/v0.1.0).
 2. In Blender: `Edit > Preferences > Add-ons > Install from Disk` and select the zip.
-3. Enable **BBone to Bones** and open the `BBone to Bones` (or `Rigging Suite`) tab in the 3D Viewport Sidebar.
+3. Enable **BBone to Bones** and open the `BBone to Bones` tab in the 3D Viewport Sidebar.
 
 ## Key Features
 
@@ -28,11 +28,10 @@ Converts Blender Bendy Bones (B-Bones) into standard deforming bone chains with 
 4. **Multi-Action / NLA Bake & Linear Skin (LBS)**:
    - **All Actions** (`bake_all_actions`): bakes and exports every armature Action and NLA strip, with full support for Blender 4.2 Actions and Blender 5.x Slotted Actions ([`core/bake.py`](core/bake.py)).
    - **Linear Skin (LBS)** (`disable_preserve_volume`): turns off Dual Quaternion `Preserve Volume` on Armature modifiers at export so Blender matches the Linear Blend Skinning used by game engines ([`core/export.py`](core/export.py)).
-5. **5 Engine Export Presets & `Rigging Suite` Auto-Tab**:
+5. **5 Engine Export Presets**:
    - Presets: `UNITY` (FBX), `UNITY_GLTF` (`.glb`), `UNREAL` (FBX), `UNREAL_GLTF` (`.glb`), and `GODOT` (`.glb`), exporting deform bones only (`add_leaf_bones=False` by default, `use_connect=False` segment chains).
-   - Automatically unifies under the **Rigging Suite** Sidebar tab when installed alongside `CTRL_DEF` or `ACTD` ([`ui/panel.py`](ui/panel.py)).
 
-## Usage (3D Viewport > Sidebar > BBone to Bones / Rigging Suite)
+## Usage (3D Viewport > Sidebar > BBone to Bones)
 
 1. **Convert Segments** (`btob.convert_segments`) - replaces each bendy bone with a chain of `<name>_seg_00..XX` deform bones (or only the current selection when **Selected Bones Only** is enabled).
 2. **Transfer Weights** (`btob.transfer_weights`) - splits and normalizes skin weights from the bendy bones onto the segment chains with curved joint boundary blending.
@@ -66,7 +65,7 @@ Builds `dist/bbone_to_bones-0.1.0.zip` alongside its `.sha256` checksum and file
 
 ## Part of the Rigging Suite
 
-BBone to Bones is fully **standalone** with **zero dependencies**, but when installed alongside **CTRL_DEF** or **A.C.T.D.** the panels automatically unify under a single **Rigging Suite** Sidebar tab, so all three rigging tools share one workflow with no extra setup.
+BBone to Bones is fully **standalone** with **zero dependencies**: it keeps its own `BBone to Bones` Sidebar tab. When installed alongside **CTRL_DEF** or **A.C.T.D.** the panel adds quick handoff buttons (`Generate CTRL`, `Bind CTRL to DEF`, `Apply ACTD`), so all three rigging tools share one workflow with no extra setup.
 
 What rigging or export step is still slowing you down? Open an issue with the workflow you want automated next.
 

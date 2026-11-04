@@ -8,10 +8,8 @@ calls the operators of ui/operators.py. Every visible line stays short (at most
 
 import bpy
 
-# The panel lives in its own tab alone, or shares the tab with the companion
-# add-ons of the suite when at least one of them is active.
+# The panel lives in its own tab alone.
 DEFAULT_CATEGORY = "BBone to Bones"
-SUITE_CATEGORY = "Rigging Suite"
 
 
 class VIEW3D_PT_BBoneToBones(bpy.types.Panel):
@@ -123,69 +121,3 @@ class VIEW3D_PT_BBoneToBones(bpy.types.Panel):
         if has_actd:
             column.operator("actd.apply_transforms", text="Apply ACTD")
 
-
-def sync_rigging_suite_tabs(unregistering=False):
-    """Move the panels of the suite under one tab when companions are active."""
-    ctrl_cls = getattr(bpy.types, "CTRLDEF_PT_panel", None)
-    actd_names = (
-        "ACTD_PT_MainPanel",
-        "ACTD_PT_SubPanel_Advanced",
-        "ACTD_PT_SubPanel_Collections",
-        "ACTD_PT_SubPanel_Baking",
-        "ACTD_PT_SubPanel_Presets",
-    )
-    actd_classes = [getattr(bpy.types, name, None) for name in actd_names]
-    actd_classes = [cls for cls in actd_classes if cls is not None]
-
-    active_count = (
-        int(ctrl_cls is not None)
-        + int(bool(actd_classes))
-        + (0 if unregistering else 1)
-    )
-    use_suite = active_count >= 2
-
-    def _rebind_panels(classes, category, top_order=None):
-        """Re-register the panels under another category, only when needed."""
-        registered = [cls for cls in classes if getattr(cls, "is_registered", False)]
-        if not registered:
-            return
-        same_category = all(
-            getattr(cls, "bl_category", None) == category for cls in registered
-        )
-        same_order = all(
-            getattr(cls, "bl_order", None) == top_order
-            for cls in registered
-            if top_order is not None and not getattr(cls, "bl_parent_id", "")
-        )
-        if same_category and same_order:
-            return
-        for cls in reversed(registered):
-            bpy.utils.unregister_class(cls)
-        for cls in registered:
-            cls.bl_category = category
-            if top_order is not None and not getattr(cls, "bl_parent_id", ""):
-                cls.bl_order = top_order
-        for cls in registered:
-            bpy.utils.register_class(cls)
-
-    if ctrl_cls is not None:
-        _rebind_panels(
-            [ctrl_cls],
-            SUITE_CATEGORY if use_suite else "DEF Ctrl",
-            top_order=10 if use_suite else 0,
-        )
-    if actd_classes:
-        _rebind_panels(
-            actd_classes,
-            SUITE_CATEGORY if use_suite else "Auto Copy Transforms",
-            top_order=20 if use_suite else 0,
-        )
-    if not unregistering and getattr(VIEW3D_PT_BBoneToBones, "is_registered", False):
-        _rebind_panels(
-            [VIEW3D_PT_BBoneToBones],
-            SUITE_CATEGORY if use_suite else DEFAULT_CATEGORY,
-            top_order=30 if use_suite else 0,
-        )
-    if unregistering:
-        VIEW3D_PT_BBoneToBones.bl_category = DEFAULT_CATEGORY
-    return SUITE_CATEGORY if use_suite else DEFAULT_CATEGORY

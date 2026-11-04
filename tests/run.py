@@ -1225,62 +1225,16 @@ def do_fase5_ui_operators():
                     )
                 )
 
-        # Auto-tab unification: alone in its own tab, in the suite with a mate.
+        # Panel tab: standalone category only, no companion tab unification.
         panel_mod = importlib.import_module("{0}.ui.panel".format(os.path.basename(ROOT)))
         panel_cls = panel_mod.VIEW3D_PT_BBoneToBones
         if panel_cls.bl_category != "BBone to Bones":
             raise AssertionError(
                 "standalone category is {0} != BBone to Bones".format(panel_cls.bl_category)
             )
-
-        class CTRLDEF_PT_panel(bpy.types.Panel):
-            """Stand-in for the companion add-on panel; not part of the add-on."""
-
-            bl_idname = "CTRLDEF_PT_panel"
-            bl_label = "DEF Ctrl"
-            bl_space_type = "VIEW_3D"
-            bl_region_type = "UI"
-            bl_category = "DEF Ctrl"
-
-            def draw(self, context):
-                pass
-
-        bpy.utils.register_class(CTRLDEF_PT_panel)
-        try:
-            mod.register()
-            if CTRLDEF_PT_panel.bl_category != "Rigging Suite":
-                raise AssertionError(
-                    "companion category is {0} != Rigging Suite".format(
-                        CTRLDEF_PT_panel.bl_category
-                    )
-                )
-            if getattr(CTRLDEF_PT_panel, "bl_order", None) != 10:
-                raise AssertionError(
-                    "companion bl_order is {0} != 10".format(
-                        getattr(CTRLDEF_PT_panel, "bl_order", None)
-                    )
-                )
-            if panel_cls.bl_category != "Rigging Suite":
-                raise AssertionError(
-                    "suite category is {0} != Rigging Suite".format(panel_cls.bl_category)
-                )
-            if getattr(panel_cls, "bl_order", None) != 30:
-                raise AssertionError(
-                    "suite bl_order is {0} != 30".format(
-                        getattr(panel_cls, "bl_order", None)
-                    )
-                )
-        finally:
-            bpy.utils.unregister_class(CTRLDEF_PT_panel)
-
-        ui_mod = importlib.import_module("{0}.ui".format(os.path.basename(ROOT)))
-        ui_mod.sync_rigging_suite_tabs()
-        if panel_cls.bl_category != "BBone to Bones":
-            raise AssertionError(
-                "category after companion removal is {0} != BBone to Bones".format(
-                    panel_cls.bl_category
-                )
-            )
+        # Removed on Blender Extensions reviewer request: the helper must be gone.
+        if hasattr(panel_mod, "sync_rigging_suite_tabs"):
+            raise AssertionError("sync_rigging_suite_tabs is still defined in ui.panel")
     finally:
         mod.unregister()
 
