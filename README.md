@@ -2,7 +2,7 @@
 
 [![Blender](https://img.shields.io/badge/Blender-4.2%20LTS%20%7C%205.x-orange)](https://www.blender.org)
 [![License](https://img.shields.io/badge/License-GPL--3.0--or--later-blue)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-22%2F22%20Passing-brightgreen)](tests/run.py)
+[![Tests](https://img.shields.io/badge/Tests-24%2F24%20Passing-brightgreen)](tests/run.py)
 [![Godot](https://img.shields.io/badge/Godot-4.7.2%20%7C%204.3-478cbf)](tests/run.py)
 [![Unity](https://img.shields.io/badge/Unity-6000.6.6f1-black)](tests/run.py)
 [![Unreal](https://img.shields.io/badge/Unreal-FBX%20%26%20glTF-0e1128)](tests/run.py)
@@ -96,3 +96,16 @@ BBone to Bones is fully **standalone** with **zero dependencies**: it keeps its 
 If a rigging or export step slows you down, open an issue with the workflow you want automated next.
 
 Developed with AI assistance under the author's direction, review, and responsibility.
+
+## Known limitations / Compatibility
+
+This addon converts Bendy Bones to standard deform bone chains, supports weight transfer, animation bake, and export for Unity, Unreal, and Godot. The minimum required Blender version is 4.2.0. Tested environments include Blender 4.2.23 LTS and 5.2.3 LTS on Ubuntu/Windows (CI), and 5.2.0 LTS locally. Note that 4.2 compatibility is only validated via CI, not locally.
+
+- Export targets game engines (FBX/glTF) using Linear Blend Skinning.
+- Conversion creates chains with `use_connect=False`.
+- Revert to BBones requires the generated segments to exist.
+- The B-Bone curve is approximated using finite segments (pose tolerance < 0.001 m).
+
+## Credits / Support / Report a bug
+
+Report bugs or suggest features via GitHub Issues: https://github.com/PieroFra/bbone-to-bones/issues. This project utilizes AI assistance but is developed under the direction, review, and full responsibility of the author. Please open issues detailing the complete workflow to facilitate automation.

@@ -9,6 +9,12 @@ maintainer = "Piero Fra"
 
 type = "add-on"
 
+# Sito progetto e titolarità dei diritti (Blender Extensions).
+website = "https://github.com/PieroFra/bbone-to-bones"
+copyright = [
+  "2026 PieroFra",
+]
+
 # Blender Extensions: GPL v3+ is a requirement for the official platform.
 license = [
   "SPDX:GPL-3.0-or-later",
@@ -19,6 +25,8 @@ blender_version_min = "4.2.0"
 tags = [
   "Rigging",
 ]
+
+description = "Converts Bendy Bones into parented bone segments with automatic skin weight transfer, optional follow constraint and bake, export presets for FBX (Unity/Unreal) and glTF (Godot), plus a full revert to the original BBones."
 
 # v1: BBone conversion >= weights >= bake >= export presets (FBX Unity/UE, glTF Godot).
 
