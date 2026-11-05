@@ -4,6 +4,17 @@ All notable changes to BBone to Bones are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-11-05
+
+### Fixed
+
+- Fix NameError nel revert dei segmenti ai bone bendy originali
+- Hardening della conversione e di `Revert to BBones` (messaggi d'errore e controlli d'ingresso)
+
+### Changed
+
+- Suite dedicate estese a 7 (revert, segmenti core, pesi/bake, export, operatori UI, meta addon)
+
 ## [0.2.0] - 2026-11-04
 
 ### Added

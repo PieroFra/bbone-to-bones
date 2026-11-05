@@ -2,7 +2,7 @@ schema_version = "1.0.0"
 
 # BBone to Bones - convert bendy bones into real bone chains.
 id = "bbone_to_bones"
-version = "0.2.0"
+version = "0.2.1"
 name = "BBone to Bones"
 tagline = "Converts bendy bones into real bone chains ready for export"
 maintainer = "Piero Fra"
