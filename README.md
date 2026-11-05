@@ -16,7 +16,7 @@ Converts Blender Bendy Bones (B-Bones) into standard deform bone chains, with au
 
 ## Quick Install
 
-1. Download [bbone_to_bones-0.2.0.zip](https://github.com/PieroFra/bbone-to-bones/releases/download/v0.2.0/bbone_to_bones-0.2.0.zip) from the [v0.2.0 Release](https://github.com/PieroFra/bbone-to-bones/releases/tag/v0.2.0).
+1. Download [bbone_to_bones-0.2.1.zip](https://github.com/PieroFra/bbone-to-bones/releases/download/v0.2.1/bbone_to_bones-0.2.1.zip) from the [v0.2.1 Release](https://github.com/PieroFra/bbone-to-bones/releases/tag/v0.2.1).
 2. In Blender: `Edit > Preferences > Add-ons > Install from Disk` and select the zip.
 3. Enable **BBone to Bones** and open the `BBone to Bones` tab in the 3D Viewport Sidebar.
 
@@ -87,7 +87,7 @@ Building the release archives is a local step: the add-on folder is staged and
 zipped, the checksum and the file manifest are written next to it, and the
 result is validated with a clean install in an isolated Blender profile.
 
-Builds `dist/bbone_to_bones-0.2.0.zip` alongside its `.sha256` checksum and file manifest, and validates clean installation in an isolated Blender profile. The images in `docs/screenshots/` are documentation only and do not enter the zip.
+Builds `dist/bbone_to_bones-0.2.1.zip` alongside its `.sha256` checksum and file manifest, and validates clean installation in an isolated Blender profile. The images in `docs/screenshots/` are documentation only and do not enter the zip.
 
 ## Part of the Rigging Suite
 
