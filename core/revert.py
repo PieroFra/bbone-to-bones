@@ -39,7 +39,7 @@ def _action_fcurves(arm_obj):
     if action is None:
         return []
     legacy = getattr(action, "fcurves", None)
-    if legacy is not None:
+    if legacy is not None and len(legacy) > 0:
         return [legacy]
     collections = []
     for layer in getattr(action, "layers", ()):

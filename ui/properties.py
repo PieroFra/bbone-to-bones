@@ -74,17 +74,27 @@ class BBoneToBonesSettings(bpy.types.PropertyGroup):
         description="Bake the scene frame range instead of the custom one",
         default=True,
     )
+    def _update_frame_start(self, context):
+        if self.frame_end < self.frame_start:
+            self.frame_end = self.frame_start
+
+    def _update_frame_end(self, context):
+        if self.frame_start > self.frame_end:
+            self.frame_start = self.frame_end
+
     frame_start: bpy.props.IntProperty(
         name="Start Frame",
         description="First frame of the custom bake range",
         default=1,
         min=0,
+        update=_update_frame_start,
     )
     frame_end: bpy.props.IntProperty(
         name="End Frame",
         description="Last frame of the custom bake range",
         default=30,
         min=0,
+        update=_update_frame_end,
     )
     frame_step: bpy.props.IntProperty(
         name="Frame Step",

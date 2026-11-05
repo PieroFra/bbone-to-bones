@@ -2,7 +2,7 @@
 
 [![Blender](https://img.shields.io/badge/Blender-4.2%20LTS%20%7C%205.x-orange)](https://www.blender.org)
 [![License](https://img.shields.io/badge/License-GPL--3.0--or--later-blue)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-24%2F24%20Passing-brightgreen)](tests/run.py)
+[![Tests](https://img.shields.io/badge/Tests-suite%20verdi%20%286%20dedicate%20%2B%20regressione%29-brightgreen)](tests/run.py)
 [![Godot](https://img.shields.io/badge/Godot-4.7.2%20%7C%204.3-478cbf)](tests/run.py)
 [![Unity](https://img.shields.io/badge/Unity-6000.6.6f1-black)](tests/run.py)
 [![Unreal](https://img.shields.io/badge/Unreal-FBX%20%26%20glTF-0e1128)](tests/run.py)

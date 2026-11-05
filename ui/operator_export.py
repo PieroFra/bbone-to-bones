@@ -29,23 +29,27 @@ class BTOB_OT_export_rig(bpy.types.Operator):
     def invoke(self, context, event):
         if self.filepath:
             return self.execute(context)
-        settings = _settings(context)
-        if (
-            not bpy.app.background
-            and hasattr(context, "window_manager")
-            and (
-                not settings.export_path
-                or (
-                    settings.export_path == "rig_export.fbx"
-                    and not bpy.data.is_saved
+        try:
+            settings = _settings(context)
+            if (
+                not bpy.app.background
+                and hasattr(context, "window_manager")
+                and (
+                    not settings.export_path
+                    or (
+                        settings.export_path == "rig_export.fbx"
+                        and not bpy.data.is_saved
+                    )
                 )
-            )
-        ):
-            self.filepath = with_preset_extension(
-                settings.export_path or "rig_export.fbx", settings.export_preset
-            )
-            context.window_manager.fileselect_add(self)
-            return {"RUNNING_MODAL"}
+            ):
+                self.filepath = with_preset_extension(
+                    settings.export_path or "rig_export.fbx", settings.export_preset
+                )
+                context.window_manager.fileselect_add(self)
+                return {"RUNNING_MODAL"}
+        except (ValueError, RuntimeError, AttributeError, TypeError) as exc:
+            self.report({"ERROR"}, str(exc))
+            return {"CANCELLED"}
         return self.execute(context)
 
     def execute(self, context):
@@ -80,7 +84,7 @@ class BTOB_OT_export_rig(bpy.types.Operator):
                     disable_preserve_vol=settings.disable_preserve_volume,
                 )
                 progress.update(1)
-        except (ValueError, RuntimeError) as exc:
+        except (ValueError, RuntimeError, AttributeError, TypeError) as exc:
             self.report({"ERROR"}, str(exc))
             return {"CANCELLED"}
         self.report(

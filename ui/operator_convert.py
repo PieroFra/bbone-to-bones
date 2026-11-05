@@ -8,6 +8,7 @@ from .operator_common import (
     _Progress,
     _bake_range,
     _bendy_bone_names,
+    _converted_bone_names,
     _pending_bone_names,
     _require_armature,
     _settings,
@@ -50,7 +51,7 @@ class BTOB_OT_convert_segments(bpy.types.Operator):
                 core.add_bbone_follow_constraints(
                     arm_obj, bone_names=report["converted"]
                 )
-        except (ValueError, RuntimeError) as exc:
+        except (ValueError, RuntimeError, AttributeError, TypeError) as exc:
             self.report({"ERROR"}, str(exc))
             return {"CANCELLED"}
         self.report(
@@ -82,7 +83,7 @@ class BTOB_OT_revert_to_bbones(bpy.types.Operator):
                 else None
             )
             report = core.revert_segments_to_bbones(arm_obj, bone_names=sources)
-        except (ValueError, RuntimeError) as exc:
+        except (ValueError, RuntimeError, AttributeError, TypeError) as exc:
             self.report({"ERROR"}, str(exc))
             return {"CANCELLED"}
         if not report["reverted"]:
@@ -145,7 +146,7 @@ class BTOB_OT_convert_all(bpy.types.Operator):
                     remove_constraints=settings.remove_constraints,
                     bake_all_actions=settings.bake_all_actions,
                 )
-        except (ValueError, RuntimeError) as exc:
+        except (ValueError, RuntimeError, AttributeError, TypeError) as exc:
             self.report({"ERROR"}, str(exc))
             return {"CANCELLED"}
         self.report(

@@ -27,6 +27,12 @@ def segment_bone_name(bone_name, index):
     Two-digit index (``BendyA.000_seg_07``) so names sort and stay stable
     across sessions; a segment never collides with an original bone name.
     """
+    if index is None:
+        raise ValueError("segment index must not be None")
+    if float(index) != int(float(index)):
+        raise ValueError(
+            "segment index must be an integer (got {0})".format(index)
+        )
     index = int(index)
     if index < 0:
         raise ValueError("segment index must be >= 0 (got {0})".format(index))

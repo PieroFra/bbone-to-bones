@@ -227,8 +227,17 @@ class VIEW3D_PT_BBoneToBones(bpy.types.Panel):
         column = layout.column(align=True)
         column.label(text="Rigging Suite", icon="LINKED")
         if has_ctrl:
-            column.operator("ctrl_def.generate", text="Generate CTRL")
-            column.operator("ctrl_def.bind_actd", text="Bind CTRL to DEF")
+            try:
+                column.operator("ctrl_def.generate", text="Generate CTRL")
+            except (ValueError, TypeError, RuntimeError):
+                pass
+            try:
+                column.operator("ctrl_def.bind_actd", text="Bind CTRL to DEF")
+            except (ValueError, TypeError, RuntimeError):
+                pass
         if has_actd:
-            column.operator("actd.apply_transforms", text="Apply ACTD")
+            try:
+                column.operator("actd.apply_transforms", text="Apply ACTD")
+            except (ValueError, TypeError, RuntimeError):
+                pass
 

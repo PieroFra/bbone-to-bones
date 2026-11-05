@@ -41,7 +41,7 @@ class BTOB_OT_transfer_weights(bpy.types.Operator):
                     remove_source_weights=settings.remove_source_weights,
                 )
                 progress.update(len(meshes))
-        except (ValueError, RuntimeError) as exc:
+        except (ValueError, RuntimeError, AttributeError, TypeError) as exc:
             self.report({"ERROR"}, str(exc))
             return {"CANCELLED"}
         self.report(
@@ -76,7 +76,7 @@ class BTOB_OT_limit_influences(bpy.types.Operator):
                     arm_obj, max_influences=settings.max_influences
                 )
                 progress.update(len(meshes))
-        except (ValueError, RuntimeError) as exc:
+        except (ValueError, RuntimeError, AttributeError, TypeError) as exc:
             self.report({"ERROR"}, str(exc))
             return {"CANCELLED"}
         self.report(

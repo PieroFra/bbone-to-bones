@@ -33,8 +33,11 @@ class BTOB_OT_add_constraints(bpy.types.Operator):
                 if settings.selected_bones_only
                 else None
             )
+            if settings.selected_bones_only and not sources:
+                self.report({"ERROR"}, "No bendy bone selected")
+                return {"CANCELLED"}
             report = core.add_bbone_follow_constraints(arm_obj, bone_names=sources)
-        except (ValueError, RuntimeError) as exc:
+        except (ValueError, RuntimeError, AttributeError, TypeError) as exc:
             self.report({"ERROR"}, str(exc))
             return {"CANCELLED"}
         if report["missing"] and not report["constrained"]:
@@ -69,7 +72,7 @@ class BTOB_OT_remove_constraints(bpy.types.Operator):
                 else None
             )
             removed = core.remove_bbone_follow_constraints(arm_obj, bone_names=sources)
-        except (ValueError, RuntimeError) as exc:
+        except (ValueError, RuntimeError, AttributeError, TypeError) as exc:
             self.report({"ERROR"}, str(exc))
             return {"CANCELLED"}
         self.report({"INFO"}, "Removed {0} follow constraints".format(removed))
@@ -101,6 +104,9 @@ class BTOB_OT_bake_animation(bpy.types.Operator):
                 if settings.selected_bones_only
                 else None
             )
+            if settings.selected_bones_only and not sources:
+                self.report({"ERROR"}, "No bendy bone selected")
+                return {"CANCELLED"}
             with _Progress(samples) as progress:
                 report = core.bake_segments_animation(
                     arm_obj,
@@ -112,7 +118,7 @@ class BTOB_OT_bake_animation(bpy.types.Operator):
                     bake_all_actions=settings.bake_all_actions,
                 )
                 progress.update(samples)
-        except (ValueError, RuntimeError) as exc:
+        except (ValueError, RuntimeError, AttributeError, TypeError) as exc:
             self.report({"ERROR"}, str(exc))
             return {"CANCELLED"}
         self.report(
