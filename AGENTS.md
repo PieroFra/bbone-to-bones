@@ -81,6 +81,7 @@ Eseguire i comandi **dalla radice del progetto**.
 | suite pesi/bake core | `& 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe' -b -noaudio --python tests/test_core_weights_bake_suite.py` |
 | suite export core | `& 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe' -b -noaudio --python tests/test_core_export_suite.py` |
 | suite operatori UI | `& 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe' -b -noaudio --python tests/test_ui_operators_suite.py` |
+| suite installazione ZIP | `blender.exe -b --factory-startup --python tests\test_zip_install_suite.py` (atteso `RISULTATO passati=4 falliti=0`) |
 | suite meta addon | `& 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe' -b -noaudio --python tests/test_addon_meta_suite.py` |
 | fixture su file | `& 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe' -b -noaudio --python tests/make_fixture.py -- save` |
 | packaging | `.\.opencode\scripts\package_release.ps1 -OutputDir dist` |

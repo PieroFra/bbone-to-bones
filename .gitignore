@@ -7,6 +7,9 @@ dist/
 *.blend2
 
 ci-logs/
+tmp_*.py
+%TEMP%/
+*.log
 
 # Note e configurazione locali (non pubbliche)
 
