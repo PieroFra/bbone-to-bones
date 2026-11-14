@@ -12,7 +12,7 @@ Converts Blender Bendy Bones (B-Bones) into standard deform bone chains, with au
 
 **v0.2.1 demo video:**
 
-https://github.com/user-attachments/assets/d49f447e-81c0-4146-9226-3ae89dd0cf38
+https://github.com/user-attachments/assets/3f188918-f509-4a3e-bc65-c17692b87a5e
 
 [Download the v0.2.1 Release](https://github.com/PieroFra/bbone-to-bones/releases/tag/v0.2.1)
 
