@@ -7,8 +7,8 @@ altro documento dice il contrario, vale questo.
 
 ## 0. Dove siamo
 
-- Workspace: `C:\Users\checc\Desktop\BLENDER ADDONS\` (**una cartella per addon**).
-- Progetto: `C:\Users\checc\Desktop\BLENDER ADDONS\bbone_to_bones\`
+- Workspace: `..\` (**una cartella per addon**).
+- Progetto: `.` (questa cartella)
 - Fino a prova contraria non esiste backup Drive per questo progetto.
 
 ---

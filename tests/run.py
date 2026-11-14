@@ -1039,7 +1039,7 @@ def do_fase4_export_reimport():
     import subprocess
 
     godot_tmp = os.path.join(tempfile.gettempdir(), "btob_gui")
-    godot_exe = r"C:\Users\checc\AppData\Local\Programs\Godot\Godot_v4.3-stable_win64_console.exe"
+    godot_exe = os.environ.get("GODOT_EXE", os.path.expandvars(r"%LOCALAPPDATA%\Programs\Godot\Godot_v4.3-stable_win64_console.exe"))
     godot_check_script = os.environ.get(
         "GODOT_IMPORT_CHECK",
         os.path.join(tempfile.gettempdir(), "godot_import_check.py"),
