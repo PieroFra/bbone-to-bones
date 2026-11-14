@@ -10,9 +10,11 @@
 
 Converts Blender Bendy Bones (B-Bones) into standard deform bone chains, with automatic weight transfer, animation baking, and export presets for **Unity**, **Unreal Engine**, and **Godot**.
 
-[Watch the v0.2.1 demo video (16:9 MP4)](https://github.com/PieroFra/bbone-to-bones/releases/download/v0.2.1/bbone_021_16x9.mp4)
+**v0.2.1 demo video:**
 
-[Vertical 9:16 MP4](https://github.com/PieroFra/bbone-to-bones/releases/download/v0.2.1/bbone_021_9x16.mp4)
+https://github.com/user-attachments/assets/d49f447e-81c0-4146-9226-3ae89dd0cf38
+
+[Download the v0.2.1 Release](https://github.com/PieroFra/bbone-to-bones/releases/tag/v0.2.1)
 
 ## Quick Install
 
