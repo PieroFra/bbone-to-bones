@@ -1,5 +1,6 @@
 ﻿param(
     [string]$OutputDir = 'dist',
+    [string]$BlenderBin = '',
     [switch]$DryRun
 )
 
@@ -25,7 +26,11 @@ $ErrorActionPreference = 'Stop'
 
 # Zona oraria fissa sugli entry dello ZIP: stesso contenuto -> stesso SHA-256.
 $ZipEpoch = [DateTimeOffset]::new(2000, 1, 1, 0, 0, 0, [TimeSpan]::Zero)
-$BlenderBin = 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe'
+. (Join-Path $PSScriptRoot '..\tools\scripts\find_blender.ps1')
+try {
+    $blenderInstall = Get-BlenderInstall $BlenderBin
+    if ($blenderInstall -and $blenderInstall.BlenderExe) { $BlenderBin = $blenderInstall.BlenderExe } else { $BlenderBin = '' }
+} catch { $BlenderBin = '' }
 
 # Contratto di packaging: 16 .py (radice, core\, ui\ + manifest) e 3 doc/meta.
 $ExpectedPy = 16
@@ -253,7 +258,7 @@ try {
     # -----------------------------------------------------------------------
 
     $g3Message = 'SKIP blender non presente: ' + $BlenderBin
-    if (Test-Path -LiteralPath $BlenderBin) {
+    if ($BlenderBin -and (Test-Path -LiteralPath $BlenderBin)) {
         # 1) Validazione del pacchetto, se il nodo --command extension.validate esiste.
         $valLines = & $BlenderBin --command extension validate $zipPath 2>&1 | ForEach-Object { $_.ToString() }
         $valCode = $LASTEXITCODE

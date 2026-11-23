@@ -12,4 +12,8 @@ tmp_*.py
 *.log
 
 # Note e configurazione locali (non pubbliche)
+tools/gate.lock
+tools/metrics.jsonl
+tools/verdict.txt
+tools/scripts/__pycache__/
 

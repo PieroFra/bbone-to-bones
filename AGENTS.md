@@ -73,19 +73,25 @@ in Pose o Object mode.
 
 Eseguire i comandi **dalla radice del progetto**.
 
+Blender non e' nel `PATH`: si definisce una volta per sessione
+(`$Blender = 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe'`)
+e i comandi sotto usano `& $Blender`. Un solo punto da aggiornare quando cambia
+la versione installata.
+
 | Cosa | Comando |
 |---|---|
-| test | `& 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe' -b -noaudio --python tests/run.py` |
-| suite revert | `& 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe' -b -noaudio --python tests/test_revert_suite.py` |
-| suite segmenti/revert core | `& 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe' -b -noaudio --python tests/test_core_segments_revert_suite.py` |
-| suite pesi/bake core | `& 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe' -b -noaudio --python tests/test_core_weights_bake_suite.py` |
-| suite export core | `& 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe' -b -noaudio --python tests/test_core_export_suite.py` |
-| suite operatori UI | `& 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe' -b -noaudio --python tests/test_ui_operators_suite.py` |
+| test | `& $Blender -b -noaudio --python tests/run.py` |
+| suite revert | `& $Blender -b -noaudio --python tests/test_revert_suite.py` |
+| suite segmenti/revert core | `& $Blender -b -noaudio --python tests/test_core_segments_revert_suite.py` |
+| suite pesi/bake core | `& $Blender -b -noaudio --python tests/test_core_weights_bake_suite.py` |
+| suite export core | `& $Blender -b -noaudio --python tests/test_core_export_suite.py` |
+| suite operatori UI | `& $Blender -b -noaudio --python tests/test_ui_operators_suite.py` |
 | suite installazione ZIP | `blender.exe -b --factory-startup --python tests\test_zip_install_suite.py` (atteso `RISULTATO passati=4 falliti=0`) |
-| suite meta addon | `& 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe' -b -noaudio --python tests/test_addon_meta_suite.py` |
-| fixture su file | `& 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe' -b -noaudio --python tests/make_fixture.py -- save` |
-| packaging | `.\.opencode\scripts\package_release.ps1 -OutputDir dist` |
-| engine (Godot 4.3) | & 'C:\Program Files\Blender Foundation\Blender 5.2\5.2\python\bin\python.exe' "$env:USERPROFILE\.config\opencode\scripts\godot_import_check.py" "$env:TEMP\opencode\btob_gui\demo_export.glb" --min-bones 96 --min-meshes 1 --require-anim |
+| suite meta addon | `& $Blender -b -noaudio --python tests/test_addon_meta_suite.py` |
+| fixture su file | `& $Blender -b -noaudio --python tests/make_fixture.py -- save` |
+| packaging | `.\tools\scripts\package_release.ps1 -OutputDir dist` |
+| gate completi (4 gate) | `.\tools\scripts\run_gates.ps1` (atteso `ALL_GATES_OK`) |
+| engine (Godot 4.3) | & 'C:\Program Files\Blender Foundation\Blender 5.2\5.2\python\bin\python.exe' "$env:USERPROFILE\.agents\scripts\godot_import_check.py" "$env:TEMP\btob_gui\demo_export.glb" --min-bones 96 --min-meshes 1 --require-anim |
 
 Blender non è nel PATH; `python` nel PATH è la stub del Microsoft Store.
 Per Blender 4.2 (non installato in locale): solo via CI quando il repo è su
@@ -94,6 +100,11 @@ GitHub: non dichiarare compatibilità 4.2 senza prova reale.
 Atteso: l'ultima riga di stdout è
 `RISULTATO passati=X falliti=Y totale=N` con **falliti=0**; exit code sempre 0,
 il verdetto si legge dal log (convenzione come intelligent_uv).
+
+Suite completa: 80 controlli (24+6+9+9+12+14+2+4) eseguiti da
+`.\tools\scripts\run_gates.ps1` (Gate 2 attende `passed=80 failed=0`,
+chiusura `ALL_GATES_OK`). Nota: test lane c14F improvvisamente
+(da rivalidare nel log reale del gate prima di dichiararlo superato).
 
 Il packaging (`package_release.ps1 -OutputDir dist`) chiude con
 `PACKAGE versione=0.2.1 file=19 py=16 docs=3`: 16 moduli `.py` + 3 file

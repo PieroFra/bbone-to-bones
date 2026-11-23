@@ -76,6 +76,16 @@ def _addon_module():
     return importlib.import_module(pkg_name)
 
 
+def _build_and_register():
+    """Build the fixture, then (idempotently) register the add-on."""
+    import make_fixture
+
+    result = make_fixture.build()
+    mod = _addon_module()
+    mod.register()
+    return result
+
+
 def _source_names():
     """The 12 bendy source bones of the fixture."""
     return [
@@ -223,7 +233,7 @@ def test_convert_segments_finished():
     import bpy
 
     mod = _addon_module()
-    _scene, arm_obj, _ = build()
+    _scene, arm_obj, _ = _build_and_register()
     result, _reports = _call_operator(mod, "btob.convert_segments")
     if result != {"FINISHED"}:
         raise AssertionError("convert_segments restituito {0}".format(sorted(result)))
@@ -250,7 +260,7 @@ def test_revert_to_bbones_after_convert():
     import bpy
 
     mod = _addon_module()
-    _scene, arm_obj, _ = build()
+    _scene, arm_obj, _ = _build_and_register()
     result, _reports = _call_operator(mod, "btob.convert_segments")
     if result != {"FINISHED"}:
         raise AssertionError("convert_segments restituito {0}".format(sorted(result)))
@@ -286,7 +296,7 @@ def test_revert_to_bbones_after_convert():
 def test_convert_all_converts_everything():
     """convert_all converts, weights and bakes the whole fixture in one call."""
     mod = _addon_module()
-    _scene, arm_obj, meshes = build()
+    _scene, arm_obj, meshes = _build_and_register()
     result, _reports = _call_operator(mod, "btob.convert_all")
     if result != {"FINISHED"}:
         raise AssertionError("convert_all restituito {0}".format(sorted(result)))
@@ -309,7 +319,7 @@ def test_convert_all_converts_everything():
 def test_transfer_weights_finished():
     """transfer_weights moves the weights onto the segments after a conversion."""
     mod = _addon_module()
-    _scene, arm_obj, meshes = build()
+    _scene, arm_obj, meshes = _build_and_register()
     result, _reports = _call_operator(mod, "btob.convert_segments")
     if result != {"FINISHED"}:
         raise AssertionError("convert_segments restituito {0}".format(sorted(result)))
@@ -325,10 +335,10 @@ def test_transfer_weights_errors():
     """transfer_weights fails cleanly without conversion or without meshes."""
     mod = _addon_module()
 
-    _scene, arm_obj, _ = build()
+    _scene, arm_obj, _ = _build_and_register()
     _expect_error(mod, "btob.transfer_weights", "No converted segments")
 
-    _scene, arm_obj, meshes = build()
+    _scene, arm_obj, meshes = _build_and_register()
     result, _reports = _call_operator(mod, "btob.convert_segments")
     if result != {"FINISHED"}:
         raise AssertionError("convert_segments restituito {0}".format(sorted(result)))
@@ -376,7 +386,7 @@ def test_add_remove_constraints():
     import bpy
 
     mod = _addon_module()
-    _scene, arm_obj, _ = build()
+    _scene, arm_obj, _ = _build_and_register()
     settings = bpy.context.scene.bbone_to_bones_settings
     settings.add_live_follow = False
     result, _reports = _call_operator(mod, "btob.convert_segments")
@@ -408,7 +418,7 @@ def test_add_remove_constraints():
 def test_add_constraints_error_without_conversion():
     """add_constraints fails cleanly when no segment exists yet."""
     mod = _addon_module()
-    _scene, arm_obj, _ = build()
+    _scene, arm_obj, _ = _build_and_register()
     _expect_error(mod, "btob.add_constraints", "No converted segment")
     return "add_constraints: errore pulito senza conversione"
 
@@ -418,7 +428,7 @@ def test_selected_bones_only_convert_revert_constraints():
     import bpy
 
     mod = _addon_module()
-    _scene, arm_obj, _ = build()
+    _scene, arm_obj, _ = _build_and_register()
     settings = bpy.context.scene.bbone_to_bones_settings
     settings.selected_bones_only = True
     chain_a = ["{0}A.{1:03d}".format(CHAIN_PREFIX, seg) for seg in range(BONES_PER_CHAIN)]
@@ -459,7 +469,7 @@ def test_selected_bones_only_convert_revert_constraints():
 def test_bake_animation_fcurves_on_segments():
     """bake_animation keys the segments over the 30-frame fixture range."""
     mod = _addon_module()
-    _scene, arm_obj, _ = build()
+    _scene, arm_obj, _ = _build_and_register()
     result, _reports = _call_operator(mod, "btob.convert_segments")
     if result != {"FINISHED"}:
         raise AssertionError("convert_segments restituito {0}".format(sorted(result)))
@@ -482,7 +492,7 @@ def test_export_rig_presets():
     import bpy
 
     mod = _addon_module()
-    _scene, arm_obj, _ = build()
+    _scene, arm_obj, _ = _build_and_register()
     result, _reports = _call_operator(mod, "btob.convert_segments")
     if result != {"FINISHED"}:
         raise AssertionError("convert_segments restituito {0}".format(sorted(result)))
