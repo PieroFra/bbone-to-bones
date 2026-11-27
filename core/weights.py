@@ -232,17 +232,27 @@ def transfer_bbone_weights(arm_obj, mesh_objs=None, normalize_deform=True, remov
                 pose_bone = arm_obj.pose.bones.get(name)
                 if pose_bone is None:
                     continue
-                count = int(bones[name].bbone_segments)
+                orig_count = int(bones[name].bbone_segments)
+                target_count = 0
+                while segment_bone_name(name, target_count) in bones:
+                    target_count += 1
+                if target_count <= 0:
+                    target_count = orig_count
                 index, blend_next = pose_bone.bbone_segment_index(coords[vertex_index])
                 blend = min(max(float(blend_next), 0.0), 1.0)
+                if target_count != orig_count and orig_count > 0:
+                    t = min(max((index + blend) / float(orig_count), 0.0), 1.0)
+                    u = t * target_count
+                    index = min(int(u), target_count - 1)
+                    blend = min(max(u - index, 0.0), 1.0)
                 next_group = None
-                if index == count - 1 and blend > 0.0:
+                if index == target_count - 1 and blend > 0.0:
                     next_group = _next_chain_segment_group(bones, name)
                 if next_group is not None:
                     pairs = {segment_bone_name(name, index): weight * (1.0 - blend), next_group: weight * blend}
                 else:
                     pairs = {}
-                    for segment, value in split_bbone_weight(weight, index, blend_next, count).items():
+                    for segment, value in split_bbone_weight(weight, index, blend, target_count).items():
                         pairs[segment_bone_name(name, segment)] = value
                 for group_name, value in pairs.items():
                     new_weights[group_name] = new_weights.get(group_name, 0.0) + value

@@ -322,3 +322,106 @@ def export_rig(
         "export_all_actions": bool(export_all_actions),
         "preserve_volume_disabled": pv_disabled,
     }
+
+
+def export_copy(
+    arm_obj,
+    filepath,
+    preset="UNITY",
+    mesh_objs=None,
+    bone_names=None,
+    deform_only=True,
+    max_segments=0,
+    normalize_deform=True,
+    remove_source_weights=True,
+    frame_start=None,
+    frame_end=None,
+    frame_step=1,
+    remove_constraints=True,
+    bake_all_actions=False,
+    add_leaf_bones=False,
+    max_influences=DEFAULT_MAX_INFLUENCES,
+    disable_preserve_vol=True,
+):
+    """Non-destructive one-click export: duplicate rig + meshes, convert, bake, export, clean up."""
+    from .bake import bake_segments_animation
+    from .segments import convert_bbones_to_segments
+    from .weights import transfer_bbone_weights
+
+    scene = bpy.context.scene
+    meshes = find_rigged_meshes(arm_obj) if mesh_objs is None else list(mesh_objs)
+    arm_copy = arm_obj.copy()
+    arm_copy.data = arm_obj.data.copy()
+    scene.collection.objects.link(arm_copy)
+
+    action_copy = None
+    if arm_obj.animation_data is not None and arm_obj.animation_data.action is not None:
+        action_copy = arm_obj.animation_data.action.copy()
+        if arm_copy.animation_data is None:
+            arm_copy.animation_data_create()
+        arm_copy.animation_data.action = action_copy
+
+    mesh_copies = []
+    for mesh_obj in meshes:
+        m_copy = mesh_obj.copy()
+        m_copy.data = mesh_obj.data.copy()
+        scene.collection.objects.link(m_copy)
+        for mod in m_copy.modifiers:
+            if mod.type == "ARMATURE" and mod.object == arm_obj:
+                mod.object = arm_copy
+        if m_copy.parent == arm_obj:
+            m_copy.parent = arm_copy
+        mesh_copies.append(m_copy)
+
+    f_start = scene.frame_start if frame_start is None else int(frame_start)
+    f_end = scene.frame_end if frame_end is None else int(frame_end)
+
+    try:
+        bpy.context.view_layer.update()
+        convert_bbones_to_segments(
+            arm_copy,
+            bone_names=bone_names,
+            deform_only=deform_only,
+            max_segments=max_segments,
+        )
+        if mesh_copies:
+            transfer_bbone_weights(
+                arm_copy,
+                mesh_objs=mesh_copies,
+                normalize_deform=normalize_deform,
+                remove_source_weights=remove_source_weights,
+            )
+        bake_segments_animation(
+            arm_copy,
+            frame_start=f_start,
+            frame_end=f_end,
+            step=int(frame_step),
+            bone_names=bone_names,
+            remove_constraints=remove_constraints,
+            bake_all_actions=bake_all_actions,
+        )
+        report = export_rig(
+            arm_copy,
+            filepath,
+            preset=preset,
+            mesh_objs=mesh_copies,
+            add_leaf_bones=add_leaf_bones,
+            max_influences=max_influences,
+            export_all_actions=bake_all_actions,
+            disable_preserve_vol=disable_preserve_vol,
+        )
+        report["non_destructive"] = True
+        report["armature"] = arm_obj.name
+        return report
+    finally:
+        for m_copy in mesh_copies:
+            m_data = m_copy.data
+            bpy.data.objects.remove(m_copy, do_unlink=True)
+            if m_data is not None and m_data.users == 0:
+                bpy.data.meshes.remove(m_data)
+        arm_data = arm_copy.data
+        bpy.data.objects.remove(arm_copy, do_unlink=True)
+        if arm_data is not None and arm_data.users == 0:
+            bpy.data.armatures.remove(arm_data)
+        if action_copy is not None and action_copy.users == 0:
+            bpy.data.actions.remove(action_copy)

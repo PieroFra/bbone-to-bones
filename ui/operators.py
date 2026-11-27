@@ -10,7 +10,7 @@ from .operator_convert import (
     BTOB_OT_convert_segments,
     BTOB_OT_revert_to_bbones,
 )
-from .operator_export import BTOB_OT_export_rig
+from .operator_export import BTOB_OT_export_copy, BTOB_OT_export_rig
 from .operator_follow import (
     BTOB_OT_add_constraints,
     BTOB_OT_bake_animation,
@@ -29,6 +29,7 @@ __all__ = [
     "BTOB_OT_bake_animation",
     "BTOB_OT_limit_influences",
     "BTOB_OT_export_rig",
+    "BTOB_OT_export_copy",
     "BTOB_OT_convert_all",
     "BTOB_OT_revert_to_bbones",
 ]

@@ -50,6 +50,7 @@ class VIEW3D_PT_BBoneToBones(bpy.types.Panel):
             return
 
         self.draw_status(layout, arm_obj)
+        self.draw_preflight(layout, arm_obj, settings)
         self.draw_pipeline(layout, arm_obj, settings)
         self.draw_segments(layout, arm_obj, settings)
         self.draw_follow(layout, arm_obj, settings)
@@ -141,6 +142,56 @@ class VIEW3D_PT_BBoneToBones(bpy.types.Panel):
             box.label(text="Segments: {0} (Static)".format(segments))
         box.label(text="Rigged meshes: {0}".format(meshes))
 
+    def draw_preflight(self, layout, arm_obj, settings):
+        """Compact pre-flight diagnostics before conversion/export."""
+        bones = arm_obj.data.bones
+        deform_only = bool(getattr(settings, "deform_bones_only", True))
+        max_seg = int(getattr(settings, "max_segments", 0))
+        conv_bones = [
+            b for b in bones
+            if int(getattr(b, "bbone_segments", 1)) > 1
+            and (not deform_only or bool(getattr(b, "use_deform", True)))
+            and "{0}_seg_00".format(b.name) not in bones
+        ]
+        planned_segs = sum(
+            (max_seg if max_seg >= 2 else int(b.bbone_segments))
+            for b in conv_bones
+        )
+        rigged_meshes = [
+            obj for obj in bpy.context.scene.objects
+            if obj.type == "MESH"
+            and (
+                any(m.type == "ARMATURE" and m.object == arm_obj for m in obj.modifiers)
+                or (obj.parent == arm_obj and obj.parent_type == "ARMATURE")
+            )
+        ]
+        has_pv = any(
+            getattr(m, "type", "") == "ARMATURE"
+            and getattr(m, "object", None) == arm_obj
+            and bool(getattr(m, "use_deform_preserve_volume", False))
+            for obj in rigged_meshes
+            for m in obj.modifiers
+        )
+        deform_names = {b.name for b in bones if bool(getattr(b, "use_deform", True))}
+        over4_verts = 0
+        for obj in rigged_meshes:
+            names_by_idx = {g.index: g.name for g in obj.vertex_groups}
+            for v in obj.data.vertices:
+                cnt = sum(
+                    1 for el in v.groups
+                    if el.weight > 0.0 and names_by_idx.get(el.group) in deform_names
+                )
+                if cnt > 4:
+                    over4_verts += 1
+
+        box = layout.box()
+        box.label(text="Pre-flight Diagnostics", icon="INFO")
+        box.label(text="Convertible: {0} -> {1} segs".format(len(conv_bones), planned_segs))
+        if has_pv:
+            box.label(text="Warn: Preserve Volume ON", icon="ERROR")
+        if over4_verts > 0:
+            box.label(text="Warn: {0} verts > 4 infl".format(over4_verts), icon="ERROR")
+
     def draw_pipeline(self, layout, arm_obj, settings):
         """One button for segments, weights and bake, plus non-destructive revert."""
         state = self._rig_state(arm_obj, settings)
@@ -161,6 +212,7 @@ class VIEW3D_PT_BBoneToBones(bpy.types.Panel):
         col = box.column(align=True)
         col.label(text="1. Segments & Weights", icon="BONE_DATA")
         col.prop(settings, "deform_bones_only", text="Deform Bones Only")
+        col.prop(settings, "max_segments", text="Max Segments")
         col.prop(settings, "selected_bones_only", text="Selected Bones Only")
         col.prop(settings, "add_live_follow", text="Live Follow Preview")
         if state["pending_bbones"] == 0 and state["converted_bbones"] > 0:
@@ -217,6 +269,7 @@ class VIEW3D_PT_BBoneToBones(bpy.types.Panel):
         col.prop(settings, "add_leaf_bones")
         col.prop(settings, "disable_preserve_volume", text="Linear Skin (LBS)")
         col.operator("btob.export_rig", text="Export Rig", icon="EXPORT")
+        col.operator("btob.export_copy", text="Export Copy (Safe)", icon="DUPLICATE")
 
     def draw_suite_bridge(self, layout):
         """Quick handoff buttons when CTRL_DEF or ACTD are active."""

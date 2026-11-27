@@ -94,3 +94,98 @@ class BTOB_OT_export_rig(bpy.types.Operator):
             ),
         )
         return {"FINISHED"}
+
+
+class BTOB_OT_export_copy(bpy.types.Operator):
+    """Non-destructive one-click export on a temporary copy of the rig and meshes."""
+
+    bl_idname = "btob.export_copy"
+    bl_label = "Export Copy (Non-Destructive)"
+    bl_description = "Duplicate rig and meshes, convert, bake, export, and keep original B-Bone rig intact"
+    bl_options = {"REGISTER", "UNDO"}
+
+    filepath: bpy.props.StringProperty(
+        name="Filepath",
+        description="Override the export path of the settings",
+        subtype="FILE_PATH",
+        default="",
+    )
+
+    def invoke(self, context, event):
+        if self.filepath:
+            return self.execute(context)
+        try:
+            settings = _settings(context)
+            if (
+                not bpy.app.background
+                and hasattr(context, "window_manager")
+                and (
+                    not settings.export_path
+                    or (
+                        settings.export_path == "rig_export.fbx"
+                        and not bpy.data.is_saved
+                    )
+                )
+            ):
+                self.filepath = with_preset_extension(
+                    settings.export_path or "rig_export.fbx", settings.export_preset
+                )
+                context.window_manager.fileselect_add(self)
+                return {"RUNNING_MODAL"}
+        except (ValueError, RuntimeError, AttributeError, TypeError) as exc:
+            self.report({"ERROR"}, str(exc))
+            return {"CANCELLED"}
+        return self.execute(context)
+
+    def execute(self, context):
+        arm_obj = _require_armature(self, context)
+        if arm_obj is None:
+            return {"CANCELLED"}
+        try:
+            settings = _settings(context)
+            raw_path = settings.export_path
+            if self.filepath:
+                settings.export_path = with_preset_extension(
+                    self.filepath, settings.export_preset
+                )
+                path = settings.export_path
+            else:
+                if not os.path.isabs(raw_path):
+                    if bpy.data.is_saved:
+                        raw_path = bpy.path.abspath(raw_path)
+                    else:
+                        raw_path = os.path.join(tempfile.gettempdir(), raw_path)
+                path = with_preset_extension(raw_path, settings.export_preset)
+            if not path:
+                raise ValueError("Export path is empty")
+            f_start = context.scene.frame_start if settings.use_scene_frame_range else settings.frame_start
+            f_end = context.scene.frame_end if settings.use_scene_frame_range else settings.frame_end
+            with _Progress(1) as progress:
+                report = core.export_copy(
+                    arm_obj,
+                    path,
+                    preset=settings.export_preset,
+                    deform_only=bool(getattr(settings, "deform_bones_only", True)),
+                    max_segments=int(getattr(settings, "max_segments", 0)),
+                    normalize_deform=settings.normalize_deform,
+                    remove_source_weights=settings.remove_source_weights,
+                    frame_start=f_start,
+                    frame_end=f_end,
+                    frame_step=int(settings.frame_step),
+                    remove_constraints=settings.remove_constraints,
+                    bake_all_actions=settings.bake_all_actions,
+                    add_leaf_bones=settings.add_leaf_bones,
+                    max_influences=settings.max_influences,
+                    disable_preserve_vol=settings.disable_preserve_volume,
+                )
+                progress.update(1)
+        except (ValueError, RuntimeError, AttributeError, TypeError) as exc:
+            self.report({"ERROR"}, str(exc))
+            return {"CANCELLED"}
+        self.report(
+            {"INFO"},
+            "Exported copy ({0}, {1}) to {2}".format(
+                report["format"], report["preset"], report["filepath"]
+            ),
+        )
+        return {"FINISHED"}

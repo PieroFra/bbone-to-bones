@@ -44,7 +44,10 @@ class BTOB_OT_convert_segments(bpy.types.Operator):
                 return {"CANCELLED"}
             with _Progress(len(pending)) as progress:
                 report = core.convert_bbones_to_segments(
-                    arm_obj, bone_names=pending, deform_only=deform_only
+                    arm_obj,
+                    bone_names=pending,
+                    deform_only=deform_only,
+                    max_segments=int(getattr(settings, "max_segments", 0)),
                 )
                 progress.update(len(pending))
             if bool(getattr(settings, "add_live_follow", True)) and report["converted"]:
@@ -127,7 +130,10 @@ class BTOB_OT_convert_all(bpy.types.Operator):
             with _Progress(3) as progress:
                 progress.update(1)
                 conversion = core.convert_bbones_to_segments(
-                    arm_obj, bone_names=pending, deform_only=deform_only
+                    arm_obj,
+                    bone_names=pending,
+                    deform_only=deform_only,
+                    max_segments=int(getattr(settings, "max_segments", 0)),
                 )
                 progress.update(2)
                 weights = core.transfer_bbone_weights(

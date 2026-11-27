@@ -54,6 +54,13 @@ class BBoneToBonesSettings(bpy.types.PropertyGroup):
         description="Convert only bendy bones with Deform enabled (skips MCH/helper bendy bones)",
         default=True,
     )
+    max_segments: bpy.props.IntProperty(
+        name="Max Segments",
+        description="Cap/resample segment count per B-Bone (0 = use bone's bbone_segments, 2..32 = uniform resample)",
+        default=0,
+        min=0,
+        max=32,
+    )
     add_live_follow: bpy.props.BoolProperty(
         name="Add Live Follow Constraints",
         description="Attach BTOB_FollowBBone constraints right after conversion for live viewport preview",

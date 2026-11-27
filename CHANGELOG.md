@@ -4,6 +4,18 @@ All notable changes to BBone to Bones are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-11-27
+
+### Added
+
+- Segment Count Cap / LOD Resampling (`max_segments`: `0` = usa `bone.bbone_segments`, `2..32` = resample uniforme)
+- Non-Destructive `Export Copy` one-click (`btob.export_copy`) per esportare senza alterare il rig B-Bone originale
+- Pre-flight Diagnostics compatto nel Sidebar (B-Bone convertibili, segmenti previsti, warning `Preserve Volume` e `> 4` influenze)
+
+### Changed
+
+- Hardening `blender_manifest.toml` (`paths_exclude_pattern` esteso per escludere tool e file di sviluppo)
+
 ## [0.2.1] - 2026-11-05
 
 ### Fixed

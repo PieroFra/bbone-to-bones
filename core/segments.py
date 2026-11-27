@@ -19,6 +19,29 @@ bone matches the Z axis of the bbone segment.
 """
 
 import bpy
+from mathutils import Matrix
+
+# Upper bound of the manual segment count override (LOD resampling).
+MAX_SEGMENTS_LIMIT = 32
+
+
+def resolve_max_segments(max_segments):
+    """Validate ``max_segments`` and return it as an int (0 = keep the rig value).
+
+    ``0`` means "use ``bone.bbone_segments``"; ``2..MAX_SEGMENTS_LIMIT`` resamples
+    every chain uniformly along the bbone curve. Anything else raises
+    ``ValueError`` before any rig data is touched.
+    """
+    value = int(max_segments or 0)
+    if value == 0:
+        return 0
+    if value < 2 or value > MAX_SEGMENTS_LIMIT:
+        raise ValueError(
+            "max_segments must be 0 or in 2..{0} (got {1})".format(
+                MAX_SEGMENTS_LIMIT, value
+            )
+        )
+    return value
 
 
 def segment_bone_name(bone_name, index):
@@ -48,6 +71,61 @@ def is_convertible_bone(bone, deform_only=True):
     return True
 
 
+def existing_segment_count(bones, source_name):
+    """Number of consecutive ``<source>_seg_XX`` bones present in ``bones``.
+
+    The truth about a converted chain is the armature, not
+    ``bone.bbone_segments``: a chain resampled with ``max_segments`` owns a
+    different number of segments than its source bendy bone. Returns ``0``
+    when the source was never converted.
+    """
+    count = 0
+    while segment_bone_name(source_name, count) in bones:
+        count += 1
+    return count
+
+
+def resample_frames(frames, count, tail_translation=None):
+    """Resample the native bbone segment frames to ``count`` frames.
+
+    ``frames`` are the native segment matrices in armature space (frame ``i``
+    sits on the bbone curve at parameter ``i / len(frames)``); the result holds
+    ``count`` frames at parameters ``j / count``, obtained by linear
+    interpolation of the translations and scales and spherical interpolation of
+    the rotations between consecutive native frames. ``tail_translation`` is
+    the frame translation at parameter ``1.0`` (the bone tail); when ``None``
+    the last native translation is reused.
+
+    ``count == len(frames)`` returns the input frames unchanged, so the
+    ``max_segments == 0`` path keeps the exact native behaviour.
+    """
+    native = len(frames)
+    if native == 0:
+        raise ValueError("resample_frames needs at least one frame")
+    count = int(count)
+    if count < 1:
+        raise ValueError("count must be >= 1 (got {0})".format(count))
+    if count == native:
+        return list(frames)
+    positions = [frame.to_translation() for frame in frames]
+    rotations = [frame.to_3x3().to_quaternion() for frame in frames]
+    scales = [frame.to_scale() for frame in frames]
+    if tail_translation is not None:
+        positions.append(tail_translation.copy())
+    else:
+        positions.append(positions[-1].copy())
+    resampled = []
+    for index in range(count):
+        parameter = (float(index) / float(count)) * float(native)
+        lower = min(int(parameter), native - 1)
+        fraction = min(max(parameter - float(lower), 0.0), 1.0)
+        position = positions[lower].lerp(positions[lower + 1], fraction)
+        rotation = rotations[lower].slerp(rotations[min(lower + 1, native - 1)], fraction)
+        scale = scales[lower].lerp(scales[min(lower + 1, native - 1)], fraction)
+        resampled.append(Matrix.LocRotScale(position, rotation, scale))
+    return resampled
+
+
 def _segment_matrices(bone, pose_bone, count):
     """Armature-space matrices of the ``count`` rest segments of ``bone``."""
     return [
@@ -56,7 +134,7 @@ def _segment_matrices(bone, pose_bone, count):
     ]
 
 
-def collect_segment_specs(arm_obj, bone_names=None, deform_only=True):
+def collect_segment_specs(arm_obj, bone_names=None, deform_only=True, max_segments=0):
     """Collect, in object mode, the bones that will replace the bbone chains.
 
     Pure: it reads the armature and returns plain data, it never changes the
@@ -72,8 +150,14 @@ def collect_segment_specs(arm_obj, bone_names=None, deform_only=True):
 
     ``bone_names`` restricts the conversion to the given bones; unknown names
     raise ``ValueError``, names that are not bendy bones are skipped.
-    ``deform_only`` skips bones whose ``use_deform`` is off.
+    ``deform_only`` skips bones whose ``use_deform`` is off. ``max_segments``
+    (0 = keep ``bone.bbone_segments``, 2..32 = uniform resample along the bbone
+    curve) overrides the number of segments of every converted chain; the
+    resampled frames come from :func:`resample_frames` over the native
+    ``bbone_segment_matrix(rest=True)`` samples, so the chain still starts on
+    the bone head and ends on the bone tail.
     """
+    override = resolve_max_segments(max_segments)
     bones = arm_obj.data.bones
     if bone_names is None:
         sources = [
@@ -94,15 +178,24 @@ def collect_segment_specs(arm_obj, bone_names=None, deform_only=True):
         bpy.context.view_layer.update()
 
     last_segment_of = {
-        src: segment_bone_name(src, int(bones[src].bbone_segments) - 1) for src in sources
+        src: segment_bone_name(
+            src,
+            (override if override else int(bones[src].bbone_segments)) - 1,
+        )
+        for src in sources
     }
 
     specs = []
     for source in sources:
         bone = bones[source]
         pose_bone = arm_obj.pose.bones[source]
-        count = int(bone.bbone_segments)
-        matrices = _segment_matrices(bone, pose_bone, count)
+        native = int(bone.bbone_segments)
+        count = override if override else native
+        matrices = _segment_matrices(bone, pose_bone, native)
+        if count != native:
+            matrices = resample_frames(
+                matrices, count, tail_translation=bone.tail_local
+            )
         heads = [matrix.to_translation().copy() for matrix in matrices]
         seg_len = bone.length / float(count)
         for index, matrix in enumerate(matrices):
@@ -166,7 +259,13 @@ def _has_local_transform_constraint(arm_obj, bone_name):
     return False
 
 
-def convert_bbones_to_segments(arm_obj, bone_names=None, deform_only=True, reparent_children=True):
+def convert_bbones_to_segments(
+    arm_obj,
+    bone_names=None,
+    deform_only=True,
+    reparent_children=True,
+    max_segments=0,
+):
     """Replace every bendy bone of ``arm_obj`` with a chain of plain bones.
 
     One single OBJECT -> EDIT -> OBJECT transition for the whole conversion.
@@ -185,8 +284,13 @@ def convert_bbones_to_segments(arm_obj, bone_names=None, deform_only=True, repar
     ``reparent_children`` moves the children of each source under its first
     segment (the head, which does not bend), except the ones driven by a
     local transform constraint (see :func:`_has_local_transform_constraint`).
+    ``max_segments`` resamples every chain uniformly along the bbone curve
+    (0 = one segment per ``bone.bbone_segments``); :func:`core.revert.revert_segments_to_bbones`
+    stays exact because it counts the segment bones that actually exist.
     """
-    specs = collect_segment_specs(arm_obj, bone_names, deform_only=deform_only)
+    specs = collect_segment_specs(
+        arm_obj, bone_names, deform_only=deform_only, max_segments=max_segments
+    )
     report = {
         "armature": arm_obj.name,
         "converted": [],

@@ -9,7 +9,7 @@ back on the source group.
 
 import bpy
 
-from .segments import is_convertible_bone, segment_bone_name
+from .segments import existing_segment_count, is_convertible_bone, segment_bone_name
 
 
 def _converted_sources(arm_obj, bone_names=None):
@@ -171,9 +171,14 @@ def revert_segments_to_bbones(arm_obj, bone_names=None):
     if not sources:
         return report
 
-    counts = {source: int(arm_obj.data.bones[source].bbone_segments) for source in sources}
+    # The chain length is what the armature actually owns, not
+    # ``bbone_segments``: a chain resampled with ``max_segments`` differs.
+    bones = arm_obj.data.bones
     segments_of = {
-        source: [segment_bone_name(source, index) for index in range(counts[source])]
+        source: [
+            segment_bone_name(source, index)
+            for index in range(existing_segment_count(bones, source))
+        ]
         for source in sources
     }
     all_segments = [name for source in sources for name in segments_of[source]]
